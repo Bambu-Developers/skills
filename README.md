@@ -8,7 +8,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT" />
-  <img src="https://img.shields.io/badge/skills-2-7c3aed.svg" alt="Skills: 2" />
+  <img src="https://img.shields.io/badge/skills-3-7c3aed.svg" alt="Skills: 3" />
   <img src="https://img.shields.io/badge/agent-Claude%20Code-d97757.svg" alt="Claude Code" />
 </p>
 
@@ -31,6 +31,7 @@ npx skills add Bambu-Developers/skills
 Or install an individual skill by name:
 
 ```bash
+npx skills add Bambu-Developers/skills/bambu-nest-rules
 npx skills add Bambu-Developers/skills/bambu-nest-test
 npx skills add Bambu-Developers/skills/bambu-readme-generator
 ```
@@ -41,8 +42,13 @@ Once installed, the agent will leverage each skill automatically when a matching
 
 | Skill | What it does |
 |-------|--------------|
+| [**bambu-nest-rules**](./bambu-nest-rules) | Project-specific conventions for our NestJS + Prisma monorepo — dynamic-module libs, Secrets Manager, typed envs, i18n, error handling, DI, and thin controllers. |
 | [**bambu-nest-test**](./bambu-nest-test) | Canonical unit-testing patterns for our NestJS + Prisma monorepo — DTO, service, controller, and module tests. |
 | [**bambu-readme-generator**](./bambu-readme-generator) | Regenerates a project's root `README.md` by autodiscovering its real state — language, layout, and scripts. |
+
+### bambu-nest-rules
+
+Project-specific conventions for the Bambu NestJS monorepo. Covers `forRoot`/`forRootAsync` dynamic modules in libs, AWS Secrets Manager integration, typed envs via `config/env.config.ts`, DTOs with i18n validation, `I18nModule` setup in apps, service-layer error handling with `I18nService.t(...)`, `PrismaService` usage, constructor-based dependency injection, and thin controllers. Load it when writing, reviewing, or refactoring any code under `apps/<service>/` or `libs/<lib>/`. Pairs with **bambu-nest-test** so tests mirror the implementation conventions.
 
 ### bambu-nest-test
 
@@ -56,6 +62,9 @@ Language- and framework-agnostic README generator. It inspects manifests (`packa
 
 ```
 skills/
+├── bambu-nest-rules/         # NestJS project conventions
+│   ├── SKILL.md
+│   └── rules/                # progressively-disclosed rule files
 ├── bambu-nest-test/          # NestJS unit-testing patterns
 │   ├── SKILL.md
 │   └── rules/                # progressively-disclosed rule files

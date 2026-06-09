@@ -14,7 +14,7 @@ This skill captures the **canonical test patterns** established in this monorepo
 - Reviewing existing tests for correctness, coverage gaps, or pattern violations
 - Adding a new microservice and scaffolding its test suite from scratch
 
-Always load together with `bambu-backend-rules` — the tests must mirror the implementation conventions.
+Always load together with `bambu-nest-rules` — the tests must mirror the implementation conventions.
 
 ## Rule index
 

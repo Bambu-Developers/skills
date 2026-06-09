@@ -1,5 +1,5 @@
 ---
-name: bambu-backend-rules
+name: bambu-nest-rules
 description: Project-specific conventions for the Bambu NestJS monorepo. Load when writing, reviewing, or refactoring any code inside this repo — covers dynamic modules in libs, AWS Secrets Manager integration, typed envs via config/env.config.ts, DTOs with i18n validation, i18n setup in apps, service-layer error handling with i18n, PrismaService usage, dependency injection, and thin-controller structure.
 ---
 
