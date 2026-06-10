@@ -1,4 +1,8 @@
 <p align="center">
+  <img src="bambu-logo.png" alt="Bambu Tech Services" width="320" />
+</p>
+
+<p align="center">
   <h1 align="center">Bambu Skills</h1>
 </p>
 
