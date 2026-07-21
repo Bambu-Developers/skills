@@ -1,69 +1,70 @@
 # bambu-terraform-aws
 
-Genera, modifica o revisa infraestructura Terraform para proyectos AWS siguiendo
-un conjunto de convenciones **reutilizables y agnósticas al proyecto**. Sirve
-para este repositorio y para cualquier otro proyecto AWS/Terraform que adopte la
-misma forma de trabajo. El argumento recibido (`$ARGUMENTS`) es el nombre del
-módulo o componente a crear/modificar (ej. `rds`, `alb`, `lambda-api`, `eks`).
+Generate, modify, or review Terraform infrastructure for AWS projects following
+a set of **reusable, project-agnostic conventions**. It serves both this
+repository and any other AWS/Terraform project that adopts the same way of
+working. The argument received (`$ARGUMENTS`) is the name of the module or
+component to create/modify (e.g. `rds`, `alb`, `lambda-api`, `eks`).
 
-## Principio rector
+## Guiding principle
 
-Estas reglas **no dependen del nombre del proyecto ni del stack de aplicación**.
-El proyecto se parametriza con `project_name`, `environment`, región y CIDRs; la
-capa de aplicación (Lambda, Fargate, EC2, EKS…) es **intercambiable** sobre una
-base común de red, datos y seguridad. Un proyecto puede ser serverless hoy y
-Fargate mañana: la base (VPC de 3 capas, RDS privado, tags, state, seguridad) no
-cambia — solo cambia el módulo de cómputo y su cableado en `main.tf`.
+These rules **do not depend on the project name or the application stack**. The
+project is parameterized with `project_name`, `environment`, region, and CIDRs;
+the application layer (Lambda, Fargate, EC2, EKS…) is **interchangeable** on top
+of a common base of networking, data, and security. A project can be serverless
+today and Fargate tomorrow: the base (3-layer VPC, private RDS, tags, state,
+security) does not change — only the compute module and its wiring in `main.tf`
+change.
 
-## Cuándo usar esta skill
+## When to use this skill
 
-- Al crear un nuevo módulo en `modules/`
-- Al crear o extender un entorno en `environments/`
-- Al elegir/cambiar la capa de aplicación de un proyecto (serverless ↔ contenedores)
-- Al revisar código Terraform para verificar convenciones, red privada y seguridad
-- Cuando el agente `aws-terraform-architect` genera código
+- When creating a new module in `modules/`
+- When creating or extending an environment in `environments/`
+- When choosing/switching a project's application layer (serverless ↔ containers)
+- When reviewing Terraform code to verify conventions, private networking, and security
+- When the `aws-terraform-architect` agent generates code
 
-## Reglas — léelas ANTES de generar cualquier archivo
+## Rules — read them BEFORE generating any file
 
-**Base transversal (aplica a todo proyecto):**
+**Cross-cutting base (applies to every project):**
 
-1. **[Estructura de módulos](rules/01-estructura-modulos.md)** — archivos obligatorios, `locals`, qué va en cada uno
-2. **[Estructura de entornos](rules/02-estructura-entornos.md)** — root modules, backend S3 activo, provider, recursos sueltos de cableado
-3. **[Naming](rules/03-naming.md)** — patrón de nombres, `name_prefix`, sufijos
-4. **[Tagging](rules/04-tagging.md)** — dos capas de tags, `common_tags`, tag `Tier`
-5. **[Iteración y outputs](rules/05-iteracion-outputs.md)** — `for_each` vs `count`, outputs deterministas
-6. **[Redes y capas de subnets](rules/06-redes-subnets.md)** — VPC de 3 capas, dónde vive cada componente
-7. **[Security groups](rules/07-security-groups.md)** — un SG por componente, referencias SG-a-SG, reglas cross-módulo
-8. **[Seguridad y Well-Architected](rules/08-seguridad-well-architected.md)** — baseline no negociable (red privada, cifrado, secretos, IAM mínimo)
+1. **[Module structure](rules/01-module-structure.md)** — required files, `locals`, what goes in each one
+2. **[Environment structure](rules/02-environment-structure.md)** — root modules, active S3 backend, provider, standalone wiring resources
+3. **[Naming](rules/03-naming.md)** — naming pattern, `name_prefix`, suffixes
+4. **[Tagging](rules/04-tagging.md)** — two tag layers, `common_tags`, `Tier` tag
+5. **[Iteration and outputs](rules/05-iteration-and-outputs.md)** — `for_each` vs `count`, deterministic outputs
+6. **[Networking and subnet layers](rules/06-networking-and-subnets.md)** — 3-layer VPC, where each component lives
+7. **[Security groups](rules/07-security-groups.md)** — one SG per component, SG-to-SG references, cross-module rules
+8. **[Security and Well-Architected](rules/08-security-and-well-architected.md)** — non-negotiable baseline (private networking, encryption, secrets, least-privilege IAM)
 
-**Capa de aplicación (parte dinámica):**
+**Application layer (the dynamic part):**
 
-9. **[Capa de aplicación](rules/09-capa-aplicacion.md)** — cómo elegir y cablear el cómputo (Lambda / Fargate / EC2 / EKS) sobre la base común
+9. **[Application layer](rules/09-application-layer.md)** — how to choose and wire the compute (Lambda / Fargate / EC2 / EKS) on top of the common base
 
-**Documentación:**
+**Documentation:**
 
-10. **[Documentación de entornos](rules/10-documentacion-entornos.md)** — estructura del `README.md` de cada entorno (arquitectura, módulos, operación)
+10. **[Environment documentation](rules/10-environment-documentation.md)** — structure of each environment's `README.md` (architecture, modules, operations)
 
-## Contexto del proyecto actual — léelo siempre primero
+## Current project context — always read it first
 
-Antes de generar cualquier archivo, inspecciona el estado real del repo (no
-asumas): las reglas son la forma de trabajo, el repo es la verdad concreta.
+Before generating any file, inspect the repo's actual state (don't assume): the
+rules are the way of working, the repo is the concrete truth.
 
-- `environments/` → entornos existentes y sus valores (`terraform.tfvars`)
-- `modules/` → módulos ya presentes y los outputs que exponen
-- Usa outputs de módulos existentes para cablear dependencias (`module.vpc.vpc_id`)
-- Verifica qué módulos **realmente** invoca el entorno: puede haber módulos en
-  `modules/` que ningún entorno activo usa (herencia de otro stack). No asumas
-  que están cableados — revisa el `main.tf` del entorno.
+- `environments/` → existing environments and their values (`terraform.tfvars`)
+- `modules/` → modules already present and the outputs they expose
+- Use existing module outputs to wire dependencies (`module.vpc.vpc_id`)
+- Verify which modules the environment **actually** invokes: there may be modules
+  in `modules/` that no active environment uses (inherited from another stack).
+  Don't assume they're wired — check the environment's `main.tf`.
 
-## Flujo de trabajo al crear un módulo o componente
+## Workflow when creating a module or component
 
-1. Si `$ARGUMENTS` no trae requisitos claros, **pregúntalos** antes de generar código (puertos, si es público/privado, si persiste datos, dependencias).
-2. Lee el estado actual del proyecto (entornos y módulos existentes).
-3. Decide la capa lógica del componente (public / private / data) según [regla 06](rules/06-redes-subnets.md) y su modelo de acceso según [regla 07](rules/07-security-groups.md).
-4. Genera los archivos en `modules/$ARGUMENTS/` aplicando **todas** las reglas.
-5. Cablea el módulo en el `main.tf` del entorno; añade recursos sueltos de glue (SGs, reglas de ingress cross-módulo) solo si corresponde ([regla 02](rules/02-estructura-entornos.md)).
-6. Actualiza `variables.tf`, `outputs.tf` y `terraform.tfvars` del entorno.
-7. Crea o actualiza el `README.md` del entorno ([regla 10](rules/10-documentacion-entornos.md)) en el mismo cambio, con los valores reales.
-8. `terraform fmt -recursive` y `terraform validate` desde el directorio del entorno.
-9. Reporta decisiones de diseño no obvias y cualquier desviación de las reglas con su justificación.
+1. If `$ARGUMENTS` doesn't carry clear requirements, **ask for them** before generating code (ports, whether it's public/private, whether it persists data, dependencies).
+2. Read the current state of the project (existing environments and modules).
+3. Decide the component's logical layer (public / private / data) per [rule 06](rules/06-networking-and-subnets.md) and its access model per [rule 07](rules/07-security-groups.md).
+4. Generate the files in `modules/$ARGUMENTS/` applying **all** the rules.
+5. Wire the module in the environment's `main.tf`; add standalone glue resources (SGs, cross-module ingress rules) only when appropriate ([rule 02](rules/02-environment-structure.md)).
+6. Update the environment's `variables.tf`, `outputs.tf`, and `terraform.tfvars`.
+7. Create or update the environment's `README.md` ([rule 10](rules/10-environment-documentation.md)) in the same change, with the real values.
+8. `terraform fmt -recursive` and `terraform validate` from the environment directory.
+9. Report non-obvious design decisions and any deviation from the rules with its justification.

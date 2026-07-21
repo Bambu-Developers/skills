@@ -1,10 +1,10 @@
 # 04 — Tagging
 
-El proyecto usa dos capas de tags que se complementan. Nunca se duplica lógica entre ellas.
+The project uses two layers of tags that complement each other. Logic is never duplicated between them.
 
-## Capa 1 — `default_tags` en el provider (entorno)
+## Layer 1 — `default_tags` in the provider (environment)
 
-Definido en `environments/<env>/versions.tf`. Se aplica automáticamente a **todos** los recursos del entorno sin escribirlos en cada recurso:
+Defined in `environments/<env>/versions.tf`. It is applied automatically to **all** resources in the environment without writing them on each resource:
 
 ```hcl
 provider "aws" {
@@ -20,9 +20,9 @@ provider "aws" {
 }
 ```
 
-## Capa 2 — `common_tags` en el módulo
+## Layer 2 — `common_tags` in the module
 
-Definido en `locals` de cada módulo. Repite los tres tags base para que el módulo sea usable independientemente del entorno que lo consuma, y mergea `var.tags` para permitir tags adicionales por entorno:
+Defined in the `locals` of each module. It repeats the three base tags so the module is usable regardless of the environment that consumes it, and merges `var.tags` to allow additional per-environment tags:
 
 ```hcl
 locals {
@@ -37,17 +37,17 @@ locals {
 }
 ```
 
-Se aplica en cada recurso del módulo:
+It is applied on each resource in the module:
 
 ```hcl
 tags = merge(local.common_tags, {
-  Name = "${local.name_prefix}-<tipo>"
+  Name = "${local.name_prefix}-<type>"
 })
 ```
 
-## Tag `Tier`
+## `Tier` tag
 
-Recursos con capa lógica agregan el tag `Tier`:
+Resources with a logical layer add the `Tier` tag:
 
 ```hcl
 # Subnets
@@ -63,11 +63,11 @@ tags = merge(local.common_tags, {
 })
 ```
 
-Valores válidos de `Tier`: `"public"`, `"private"`, `"data"`.
+Valid values for `Tier`: `"public"`, `"private"`, `"data"`.
 
-## Tags adicionales por entorno (`var.tags`)
+## Additional per-environment tags (`var.tags`)
 
-Definidos en `terraform.tfvars` de cada entorno. Los valores concretos dependen del proyecto:
+Defined in the `terraform.tfvars` of each environment. The concrete values depend on the project:
 
 ```hcl
 # environments/dev/terraform.tfvars
@@ -77,19 +77,19 @@ tags = {
 }
 ```
 
-## Resultado final en un recurso (subnet pública)
+## Final result on a resource (public subnet)
 
 ```
 Project     = "{project_name}"                  ← default_tags + common_tags
 Environment = "dev"                             ← default_tags + common_tags
 ManagedBy   = "Terraform"                       ← default_tags + common_tags
-Name        = "{project_name}-dev-public-{az}"  ← recurso
-Tier        = "public"                          ← recurso
+Name        = "{project_name}-dev-public-{az}"  ← resource
+Tier        = "public"                          ← resource
 Owner       = "platform-team"                   ← var.tags
 CostCenter  = "{project}-dev"                   ← var.tags
 ```
 
-## Variable `tags` — obligatoria en todo módulo
+## `tags` variable — required in every module
 
 ```hcl
 variable "tags" {
@@ -99,18 +99,18 @@ variable "tags" {
 }
 ```
 
-## Anti-patrones
+## Anti-patterns
 
 ```hcl
-# ❌ Tags hardcodeados (no parametrizados)
+# ❌ Hardcoded tags (not parameterized)
 tags = {
   Project     = "my-project"
   Environment = "dev"
 }
 
-# ❌ No mergear var.tags — impide override por entorno
+# ❌ Not merging var.tags — prevents per-environment override
 tags = local.common_tags
 
-# ❌ Módulo sin variable tags
-# (no hay forma de agregar tags desde el entorno)
+# ❌ Module without a tags variable
+# (there is no way to add tags from the environment)
 ```

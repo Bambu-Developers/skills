@@ -1,21 +1,21 @@
 # 07 — Security groups
 
-Los security groups son el control de acceso **este-oeste** (entre componentes).
-La regla central: el tráfico interno se autoriza **por referencia a otro SG**,
-nunca por CIDR. Los CIDR solo se usan para tráfico que genuinamente viene de
-internet o de un rango externo conocido (VPN corporativa).
+Security groups are the **east-west** access control (between components).
+The core rule: internal traffic is authorized **by reference to another SG**,
+never by CIDR. CIDRs are only used for traffic that genuinely comes from
+the internet or from a known external range (corporate VPN).
 
-## Un SG por componente
+## One SG per component
 
-Cada componente tiene su propio SG dedicado, nombrado `{prefix}-{componente}-sg`
-(regla 03) y etiquetado con su `Tier` cuando aplica. No se comparten SGs entre
-componentes distintos.
+Each component has its own dedicated SG, named `{prefix}-{component}-sg`
+(rule 03) and tagged with its `Tier` when applicable. SGs are not shared between
+different components.
 
-## Reglas como recursos separados (no bloques inline)
+## Rules as separate resources (not inline blocks)
 
-Usa `aws_vpc_security_group_ingress_rule` / `aws_vpc_security_group_egress_rule`
-(una regla = un recurso), **no** los bloques `ingress`/`egress` embebidos en
-`aws_security_group`. Cada regla lleva `description` y su tag `Name`.
+Use `aws_vpc_security_group_ingress_rule` / `aws_vpc_security_group_egress_rule`
+(one rule = one resource), **not** the `ingress`/`egress` blocks embedded in
+`aws_security_group`. Each rule carries a `description` and its `Name` tag.
 
 ```hcl
 resource "aws_security_group" "app" {
@@ -26,13 +26,13 @@ resource "aws_security_group" "app" {
 }
 ```
 
-## Referencia SG-a-SG para tráfico interno
+## SG-to-SG reference for internal traffic
 
-El origen permitido se expresa con `referenced_security_group_id`, no con
-`cidr_ipv4`. Así el permiso sigue al componente aunque cambien sus IPs:
+The allowed source is expressed with `referenced_security_group_id`, not with
+`cidr_ipv4`. This way the permission follows the component even if its IPs change:
 
 ```hcl
-# ✅ El almacén de datos solo acepta al SG de la app.
+# ✅ The data store only accepts the app's SG.
 resource "aws_vpc_security_group_ingress_rule" "db_from_app" {
   security_group_id            = aws_security_group.db.id
   description                  = "DB port from the application SG only."
@@ -43,16 +43,16 @@ resource "aws_vpc_security_group_ingress_rule" "db_from_app" {
 }
 ```
 
-## Reglas cross-módulo: las agrega el consumidor, no el dueño del SG
+## Cross-module rules: added by the consumer, not the SG owner
 
-Cuando un módulo B necesita alcanzar un recurso del módulo A, la **regla de
-ingress sobre el SG de A la crea el módulo B** (recibiendo `a_sg_id` como
-variable). Así el módulo A permanece sin modificar y sin conocer a sus clientes.
+When a module B needs to reach a resource in module A, the **ingress rule on
+A's SG is created by module B** (receiving `a_sg_id` as a variable). This way
+module A stays unmodified and unaware of its clients.
 
 ```hcl
-# En el módulo bastion: el bastion añade su PROPIA regla al SG del RDS.
+# In the bastion module: the bastion adds its OWN rule to the RDS SG.
 resource "aws_vpc_security_group_ingress_rule" "rds_from_bastion" {
-  security_group_id            = var.rds_sg_id            # SG que pertenece al módulo rds
+  security_group_id            = var.rds_sg_id            # SG that belongs to the rds module
   referenced_security_group_id = aws_security_group.bastion.id
   from_port                    = 5432
   to_port                      = 5432
@@ -61,8 +61,8 @@ resource "aws_vpc_security_group_ingress_rule" "rds_from_bastion" {
 }
 ```
 
-Patrón equivalente para listas de clientes (varias apps/SGs permitidos), keyeado
-por índice de lista (conocido en plan-time), no por SG id (conocido tras apply):
+Equivalent pattern for client lists (several allowed apps/SGs), keyed by
+list index (known at plan time), not by SG id (known after apply):
 
 ```hcl
 resource "aws_vpc_security_group_ingress_rule" "from_clients" {
@@ -78,21 +78,21 @@ resource "aws_vpc_security_group_ingress_rule" "from_clients" {
 
 ## Egress
 
-- El egress `0.0.0.0/0` (todo saliente) es aceptable para cómputo y proxies que
-  necesitan pulls de imágenes, logs y APIs de AWS — documenta el porqué en la
+- The `0.0.0.0/0` egress (all outbound) is acceptable for compute and proxies
+  that need to pull images, logs and AWS APIs — document the why in the
   `description`.
-- Para SGs cuyo único rol es *iniciar* conexiones salientes (p.ej. el SG de
-  Lambdas), define **solo egress**; el ingress a los destinos lo conceden esos
-  destinos referenciando este SG.
+- For SGs whose only role is to *initiate* outbound connections (e.g. the
+  Lambda SG), define **egress only**; ingress to the destinations is granted by
+  those destinations referencing this SG.
 
-## Ingress desde internet — solo en el borde público
+## Ingress from the internet — only at the public edge
 
-`cidr_ipv4 = "0.0.0.0/0"` se permite únicamente en el SG del borde público
-(ALB/NLB) en puertos 80/443, o en el bastion (SSH) — y en prod el SSH debería
-restringirse al CIDR corporativo/VPN, no a `0.0.0.0/0`.
+`cidr_ipv4 = "0.0.0.0/0"` is allowed only on the public edge SG
+(ALB/NLB) on ports 80/443, or on the bastion (SSH) — and in prod SSH should be
+restricted to the corporate/VPN CIDR, not to `0.0.0.0/0`.
 
 ```hcl
-# ✅ Borde público: HTTP/HTTPS desde internet al ALB.
+# ✅ Public edge: HTTP/HTTPS from the internet to the ALB.
 resource "aws_vpc_security_group_ingress_rule" "alb_https" {
   security_group_id = aws_security_group.alb.id
   from_port         = 443
@@ -102,31 +102,31 @@ resource "aws_vpc_security_group_ingress_rule" "alb_https" {
 }
 ```
 
-## Cadena típica de acceso (borde → app → datos)
+## Typical access chain (edge → app → data)
 
 ```
 Internet ──(80/443, CIDR 0.0.0.0/0)──▶ ALB SG
 ALB SG ──(container_port, SG-ref)──────▶ App SG        (Fargate/EC2)
-App SG ──(db_port, SG-ref)─────────────▶ Proxy/DB SG   (capa data)
-Bastion SG ──(db_port, SG-ref)─────────▶ DB SG         (acceso operativo)
+App SG ──(db_port, SG-ref)─────────────▶ Proxy/DB SG   (data tier)
+Bastion SG ──(db_port, SG-ref)─────────▶ DB SG         (operational access)
 ```
 
-Cada flecha con SG-ref es una regla de ingress sobre el SG destino, creada por el
-componente origen. La única flecha con CIDR es la primera (internet → borde).
+Each arrow with SG-ref is an ingress rule on the destination SG, created by the
+source component. The only arrow with a CIDR is the first one (internet → edge).
 
-## Anti-patrones
+## Anti-patterns
 
 ```hcl
-# ❌ Autorizar tráfico interno por CIDR de la VPC en vez de por SG
-cidr_ipv4 = "10.0.0.0/16"   # usa referenced_security_group_id
+# ❌ Authorizing internal traffic by the VPC CIDR instead of by SG
+cidr_ipv4 = "10.0.0.0/16"   # use referenced_security_group_id
 
-# ❌ Base de datos con ingress 0.0.0.0/0
+# ❌ Database with 0.0.0.0/0 ingress
 security_group_id = aws_security_group.db.id
 cidr_ipv4         = "0.0.0.0/0"
 
-# ❌ Reglas inline dentro de aws_security_group (dificultan diffs y cross-módulo)
+# ❌ Inline rules inside aws_security_group (they hinder diffs and cross-module use)
 resource "aws_security_group" "x" { ingress { ... } }
 
-# ❌ El módulo dueño del SG conociendo a todos sus clientes por nombre
-#    (invierte la dependencia: el cliente añade su regla, no el dueño)
+# ❌ The module that owns the SG knowing all its clients by name
+#    (inverts the dependency: the client adds its rule, not the owner)
 ```
