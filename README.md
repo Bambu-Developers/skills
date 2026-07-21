@@ -12,7 +12,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT" />
-  <img src="https://img.shields.io/badge/skills-3-7c3aed.svg" alt="Skills: 3" />
+  <img src="https://img.shields.io/badge/skills-4-7c3aed.svg" alt="Skills: 4" />
   <img src="https://img.shields.io/badge/agent-Claude%20Code-d97757.svg" alt="Claude Code" />
 </p>
 
@@ -38,6 +38,7 @@ Or install an individual skill by name:
 npx skills add Bambu-Developers/skills/bambu-nest-rules
 npx skills add Bambu-Developers/skills/bambu-nest-test
 npx skills add Bambu-Developers/skills/bambu-readme-generator
+npx skills add Bambu-Developers/skills/bambu-terraform-aws
 ```
 
 Once installed, the agent will leverage each skill automatically when a matching task comes up — no manual invocation required.
@@ -49,6 +50,7 @@ Once installed, the agent will leverage each skill automatically when a matching
 | [**bambu-nest-rules**](./bambu-nest-rules) | Project-specific conventions for our NestJS + Prisma monorepo — dynamic-module libs, Secrets Manager, typed envs, i18n, error handling, DI, and thin controllers. |
 | [**bambu-nest-test**](./bambu-nest-test) | Canonical unit-testing patterns for our NestJS + Prisma monorepo — DTO, service, controller, and module tests. |
 | [**bambu-readme-generator**](./bambu-readme-generator) | Regenerates a project's root `README.md` by autodiscovering its real state — language, layout, and scripts. |
+| [**bambu-terraform-aws**](./bambu-terraform-aws) | Reusable, project-agnostic conventions for generating, modifying, and reviewing Terraform infrastructure on AWS — modules, environments, networking, security groups, tagging, and the interchangeable compute layer. |
 
 ### bambu-nest-rules
 
@@ -61,6 +63,10 @@ Unit-testing patterns for the Bambu NestJS monorepo. Covers `plainToInstance` + 
 ### bambu-readme-generator
 
 Language- and framework-agnostic README generator. It inspects manifests (`package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, …), maps the repo layout, extracts runnable scripts, and renders a canonical README from a template — treating the existing one as a stale snapshot. Load it when you ask to "generate", "update", or "refresh" the project README.
+
+### bambu-terraform-aws
+
+Reusable, project-agnostic conventions for Terraform on AWS. Covers module and environment structure, naming, two-layer tagging, `for_each`/`count` iteration and deterministic outputs, a 3-layer VPC with private data tiers, one-SG-per-component security groups with SG-to-SG references, a non-negotiable Well-Architected security baseline (private networking, encryption, secrets, least-privilege IAM), and an interchangeable application/compute layer (Lambda / Fargate / EC2 / EKS) on a common base. Load it when creating or reviewing modules under `modules/` or environments under `environments/`, wiring the VPC, subnets, or security groups, or choosing/switching the compute layer.
 
 ## Repository layout
 
@@ -75,6 +81,9 @@ skills/
 ├── bambu-readme-generator/   # README generator
 │   ├── SKILL.md
 │   └── templates/            # skeleton + section recipes
+├── bambu-terraform-aws/      # Terraform/AWS infrastructure conventions
+│   ├── SKILL.md
+│   └── rules/                # progressively-disclosed rule files
 └── CLAUDE.md                 # guidance for agents working in THIS repo
 ```
 

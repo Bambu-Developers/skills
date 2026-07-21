@@ -1,3 +1,8 @@
+---
+name: bambu-terraform-aws
+description: Reusable, project-agnostic conventions for generating, modifying, or reviewing Terraform infrastructure on AWS. Load when creating or editing Terraform modules (modules/) or environments (environments/), wiring VPC/networking, subnets, security groups, RDS/data layer, IAM, tagging, naming, state/backend, or choosing/switching the application/compute layer (Lambda, Fargate, EC2, EKS). Triggers on phrases like "create a Terraform module", "add an environment", "review this Terraform", "set up the VPC", "crear un módulo de Terraform", "revisar infra AWS", "configurar la red/VPC", and any AWS IaC work following these conventions.
+---
+
 # bambu-terraform-aws
 
 Generate, modify, or review Terraform infrastructure for AWS projects following
