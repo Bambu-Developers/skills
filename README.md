@@ -12,7 +12,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT" />
-  <img src="https://img.shields.io/badge/skills-4-7c3aed.svg" alt="Skills: 4" />
+  <img src="https://img.shields.io/badge/skills-5-7c3aed.svg" alt="Skills: 5" />
   <img src="https://img.shields.io/badge/agent-Claude%20Code-d97757.svg" alt="Claude Code" />
 </p>
 
@@ -35,6 +35,7 @@ npx skills add Bambu-Developers/skills
 Or install an individual skill by name:
 
 ```bash
+npx skills add Bambu-Developers/skills/bambu-goals-loop
 npx skills add Bambu-Developers/skills/bambu-nest-rules
 npx skills add Bambu-Developers/skills/bambu-nest-test
 npx skills add Bambu-Developers/skills/bambu-readme-generator
@@ -47,10 +48,15 @@ Once installed, the agent will leverage each skill automatically when a matching
 
 | Skill | What it does |
 |-------|--------------|
+| [**bambu-goals-loop**](./bambu-goals-loop) | Bambú's development methodology — goals with deliverable checklists, session loops, and persistent memory (`GOALS.md` / `MEMORY.md` / `AGENTS.md`), with OWASP security gates at every checkpoint. |
 | [**bambu-nest-rules**](./bambu-nest-rules) | Project-specific conventions for our NestJS + Prisma monorepo — dynamic-module libs, Secrets Manager, typed envs, i18n, error handling, DI, and thin controllers. |
 | [**bambu-nest-test**](./bambu-nest-test) | Canonical unit-testing patterns for our NestJS + Prisma monorepo — DTO, service, controller, and module tests. |
 | [**bambu-readme-generator**](./bambu-readme-generator) | Regenerates a project's root `README.md` by autodiscovering its real state — language, layout, and scripts. |
 | [**bambu-terraform-aws**](./bambu-terraform-aws) | Reusable, project-agnostic conventions for generating, modifying, and reviewing Terraform infrastructure on AWS — modules, environments, networking, security groups, tagging, and the interchangeable compute layer. |
+
+### bambu-goals-loop
+
+Bambú's goal-based development methodology. The project advances by **goals** with deliverable checklists (`GOALS.md`), every work session is a **loop** (open → small reviewable steps with checkpoints → close), and state lives in **persistent memory** versioned in the repo (`MEMORY.md`, with `AGENTS.md` as the single source of truth for conventions). Security is a gate at every checkpoint, not a phase. Load it to start a new project, retrofit an existing repo, run or resume a work session, close a goal with a PR, or audit a project (quality/security). Includes stack annexes for Flutter, native Android, and Web.
 
 ### bambu-nest-rules
 
@@ -72,6 +78,10 @@ Reusable, project-agnostic conventions for Terraform on AWS. Covers module and e
 
 ```
 skills/
+├── bambu-goals-loop/         # goal-based methodology, session loops, persistent memory
+│   ├── SKILL.md
+│   ├── rules/                # progressively-disclosed rule files
+│   └── templates/            # {{PLACEHOLDER}} skeletons + file recipes
 ├── bambu-nest-rules/         # NestJS project conventions
 │   ├── SKILL.md
 │   └── rules/                # progressively-disclosed rule files
