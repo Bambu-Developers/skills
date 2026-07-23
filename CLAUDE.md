@@ -30,8 +30,11 @@ Each top-level directory is one self-contained skill:
 
 ## Existing skills
 
+- `bambu-nest-rules/` — project-specific conventions for the NestJS + Prisma monorepo (dynamic-module libs, Secrets Manager, typed envs, i18n, DI, thin controllers). Specific to that *consumer* monorepo, not to this repo.
 - `bambu-nest-test/` — unit-testing patterns for a NestJS + Prisma + nestjs-i18n monorepo (DTO / service / controller / module tests). The patterns it documents are specific to that *consumer* monorepo, not to this repo.
 - `bambu-readme-generator/` — language-agnostic root `README.md` generator that autodiscovers stack, layout, and scripts from the filesystem.
+- `bambu-terraform-aws/` — reusable, project-agnostic conventions for generating, modifying, and reviewing Terraform infrastructure on AWS (modules, environments, VPC/networking, security groups, tagging, interchangeable compute layer).
+- `bambu-e2e-test-matrix/` — generic manual E2E QA orchestrator: explores a web app, builds an approvable test matrix, then runs it in batches via Playwright MCP (one module per sub-agent), records continuous video evidence, checkpoints/resumes runs, optionally diffs against Figma and runs SAST, and closes with a score + ranking. Unlike the other skills it has `scripts/`, `references/` (incl. `agents/` sub-agent profiles), and `assets/templates/`, and requires the Playwright MCP configured via its `scripts/setup.sh`.
 
 ## When editing or adding skills
 

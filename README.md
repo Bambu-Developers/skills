@@ -12,7 +12,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT" />
-  <img src="https://img.shields.io/badge/skills-4-7c3aed.svg" alt="Skills: 4" />
+  <img src="https://img.shields.io/badge/skills-5-7c3aed.svg" alt="Skills: 5" />
   <img src="https://img.shields.io/badge/agent-Claude%20Code-d97757.svg" alt="Claude Code" />
 </p>
 
@@ -35,6 +35,7 @@ npx skills add Bambu-Developers/skills
 Or install an individual skill by name:
 
 ```bash
+npx skills add Bambu-Developers/skills/bambu-e2e-test-matrix
 npx skills add Bambu-Developers/skills/bambu-nest-rules
 npx skills add Bambu-Developers/skills/bambu-nest-test
 npx skills add Bambu-Developers/skills/bambu-readme-generator
@@ -43,14 +44,27 @@ npx skills add Bambu-Developers/skills/bambu-terraform-aws
 
 Once installed, the agent will leverage each skill automatically when a matching task comes up — no manual invocation required.
 
+> **`bambu-e2e-test-matrix` needs one extra setup step.** Unlike the other skills, it drives a real browser and records video through the **Playwright MCP**, so it requires a one-time MCP configuration. After installing, run its bundled setup script once (it pins `@playwright/mcp@0.0.68` with `--save-video` and optionally registers its sub-agents):
+>
+> ```bash
+> bash bambu-e2e-test-matrix/scripts/setup.sh
+> ```
+>
+> Then verify with `/mcp` that `playwright` is connected. See [`bambu-e2e-test-matrix/README.md`](./bambu-e2e-test-matrix/README.md) for the manual equivalent and the optional Figma/SAST tooling.
+
 ## Available skills
 
 | Skill | What it does |
 |-------|--------------|
+| [**bambu-e2e-test-matrix**](./bambu-e2e-test-matrix) | Generates and runs manual E2E test matrices (flow, usability, visual, accessibility, edge cases) against any web app via Playwright MCP — batch execution with continuous video evidence, optional Figma diffs and SAST security analysis, and a final scoring/ranking. |
 | [**bambu-nest-rules**](./bambu-nest-rules) | Project-specific conventions for our NestJS + Prisma monorepo — dynamic-module libs, Secrets Manager, typed envs, i18n, error handling, DI, and thin controllers. |
 | [**bambu-nest-test**](./bambu-nest-test) | Canonical unit-testing patterns for our NestJS + Prisma monorepo — DTO, service, controller, and module tests. |
 | [**bambu-readme-generator**](./bambu-readme-generator) | Regenerates a project's root `README.md` by autodiscovering its real state — language, layout, and scripts. |
 | [**bambu-terraform-aws**](./bambu-terraform-aws) | Reusable, project-agnostic conventions for generating, modifying, and reviewing Terraform infrastructure on AWS — modules, environments, networking, security groups, tagging, and the interchangeable compute layer. |
+
+### bambu-e2e-test-matrix
+
+Generic, self-contained skill for **manual E2E QA** on any web application. It runs in two phases: first it explores the site (and optionally the source repo, read-only) and proposes a test matrix (`matriz-pruebas.csv`) covering functional, flow, usability, visual, accessibility, and edge/negative cases — then, only after you approve it, it executes. Execution is delegated to sub-agents batch by batch (one module per `e2e-runner`; the orchestrator only coordinates, never navigates), records **one continuous video per module** as evidence, checkpoints progress to `ESTADO-CORRIDA.md` so a run can resume where it left off, and enforces a completeness gate so no approved case is silently left pending. It can optionally diff screens against a **Figma** design and run static **SAST** security analysis (OWASP Top 10, CWE Top 25, hardcoded secrets, dependency CVEs), and closes with a 0–100 score, letter grade, and per-module ranking. Everything is saved locally; it **never modifies** the code of the app under test. Requires the Playwright MCP (see the extra setup step under [Installation](#installation)). Load it when you ask for an "E2E test matrix", "flow/usability testing", "test a site", "video test evidence", "compare the UI against Figma", or "SAST/security analysis of the code".
 
 ### bambu-nest-rules
 
@@ -72,6 +86,11 @@ Reusable, project-agnostic conventions for Terraform on AWS. Covers module and e
 
 ```
 skills/
+├── bambu-e2e-test-matrix/    # manual E2E QA (Playwright MCP)
+│   ├── SKILL.md
+│   ├── scripts/              # setup.sh — one-time Playwright MCP config
+│   ├── references/           # browser/visual/a11y/SAST guides + agents/ profiles
+│   └── assets/templates/     # matriz-pruebas.csv · ESTADO-CORRIDA.md · reporte.md
 ├── bambu-nest-rules/         # NestJS project conventions
 │   ├── SKILL.md
 │   └── rules/                # progressively-disclosed rule files
