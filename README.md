@@ -12,7 +12,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT" />
-  <img src="https://img.shields.io/badge/skills-5-7c3aed.svg" alt="Skills: 5" />
+  <img src="https://img.shields.io/badge/skills-6-7c3aed.svg" alt="Skills: 6" />
   <img src="https://img.shields.io/badge/agent-Claude%20Code-d97757.svg" alt="Claude Code" />
 </p>
 
@@ -39,6 +39,7 @@ npx skills add Bambu-Developers/skills/bambu-e2e-test-matrix
 npx skills add Bambu-Developers/skills/bambu-nest-rules
 npx skills add Bambu-Developers/skills/bambu-nest-test
 npx skills add Bambu-Developers/skills/bambu-readme-generator
+npx skills add Bambu-Developers/skills/bambu-snyk-dependency-hardening
 npx skills add Bambu-Developers/skills/bambu-terraform-aws
 ```
 
@@ -60,6 +61,7 @@ Once installed, the agent will leverage each skill automatically when a matching
 | [**bambu-nest-rules**](./bambu-nest-rules) | Project-specific conventions for our NestJS + Prisma monorepo — dynamic-module libs, Secrets Manager, typed envs, i18n, error handling, DI, and thin controllers. |
 | [**bambu-nest-test**](./bambu-nest-test) | Canonical unit-testing patterns for our NestJS + Prisma monorepo — DTO, service, controller, and module tests. |
 | [**bambu-readme-generator**](./bambu-readme-generator) | Regenerates a project's root `README.md` by autodiscovering its real state — language, layout, and scripts. |
+| [**bambu-snyk-dependency-hardening**](./bambu-snyk-dependency-hardening) | Portable decision framework for triaging and remediating Snyk (or equivalent SCA) findings in third-party dependencies — upgrade vs. documented exception, verifying an upgrade is actually safe, and writing well-formed `.snyk` ignore entries with severity-based expiration. |
 | [**bambu-terraform-aws**](./bambu-terraform-aws) | Reusable, project-agnostic conventions for generating, modifying, and reviewing Terraform infrastructure on AWS — modules, environments, networking, security groups, tagging, and the interchangeable compute layer. |
 
 ### bambu-e2e-test-matrix
@@ -77,6 +79,10 @@ Unit-testing patterns for the Bambu NestJS monorepo. Covers `plainToInstance` + 
 ### bambu-readme-generator
 
 Language- and framework-agnostic README generator. It inspects manifests (`package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, …), maps the repo layout, extracts runnable scripts, and renders a canonical README from a template — treating the existing one as a stale snapshot. Load it when you ask to "generate", "update", or "refresh" the project README.
+
+### bambu-snyk-dependency-hardening
+
+Generic, project-agnostic decision framework for triaging vulnerability findings reported by Snyk or an equivalent SCA tool (`npm audit`, etc.) in third-party dependencies. For each finding it walks a fixed decision tree: check whether a safe upgrade exists (verifying real breaking changes and toolchain compatibility — e.g. an ESM/CJS mismatch — not just the advisory text, then running the tests of every real consumer); if not, judge real exploitability at the actual call site rather than trusting the advisory; and if genuinely non-exploitable, document a well-formed `.snyk` ignore entry with a technical `reason` and an `expires` date set by severity (7 days for Critical/High, 30 days for Medium/Low). It also covers gating changes to the ignore-policy file behind CODEOWNERS. It never lowers the scanner's severity threshold and never commits/pushes on its own. Load it when a Snyk/SCA check fails, when deciding upgrade vs. exception for a vulnerable dependency, or when writing/reviewing a `.snyk` policy change.
 
 ### bambu-terraform-aws
 
@@ -100,6 +106,9 @@ skills/
 ├── bambu-readme-generator/   # README generator
 │   ├── SKILL.md
 │   └── templates/            # skeleton + section recipes
+├── bambu-snyk-dependency-hardening/  # Snyk/SCA dependency triage & remediation
+│   ├── SKILL.md
+│   └── README.md              # how the skill triggers (auto vs. explicit)
 ├── bambu-terraform-aws/      # Terraform/AWS infrastructure conventions
 │   ├── SKILL.md
 │   └── rules/                # progressively-disclosed rule files
