@@ -35,6 +35,7 @@ Each top-level directory is one self-contained skill:
 - `bambu-readme-generator/` — language-agnostic root `README.md` generator that autodiscovers stack, layout, and scripts from the filesystem.
 - `bambu-terraform-aws/` — reusable, project-agnostic conventions for generating, modifying, and reviewing Terraform infrastructure on AWS (modules, environments, VPC/networking, security groups, tagging, interchangeable compute layer).
 - `bambu-e2e-test-matrix/` — generic manual E2E QA orchestrator: explores a web app, builds an approvable test matrix, then runs it in batches via Playwright MCP (one module per sub-agent), records continuous video evidence, checkpoints/resumes runs, optionally diffs against Figma and runs SAST, and closes with a score + ranking. Unlike the other skills it has `scripts/`, `references/` (incl. `agents/` sub-agent profiles), and `assets/templates/`, and requires the Playwright MCP configured via its `scripts/setup.sh`.
+- `bambu-snyk-dependency-hardening/` — portable, project-agnostic decision framework for triaging and remediating Snyk (or equivalent SCA) findings in third-party dependencies: upgrade-vs-exception decision tree, safe-upgrade verification, `.snyk` ignore-entry format, and severity-based expiration policy. Has its own `README.md` explaining how it triggers (automatic vs. explicit).
 
 ## When editing or adding skills
 
