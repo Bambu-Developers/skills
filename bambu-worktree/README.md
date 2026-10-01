@@ -1,6 +1,6 @@
 # bambu-worktree
 
-Skill de Claude Code para crear un **git worktree aislado** en `worktrees/<feature>/`,
+Skill de Claude Code para crear un **git worktree aislado** en `.worktrees/<feature>/`,
 con su propia rama, a partir de una descripción breve del requerimiento o de un
 nombre de rama explícito. Pensado para trabajar varias cosas en paralelo sin
 hacer `stash`/`checkout` constantes en el mismo directorio de trabajo. No asume
@@ -50,24 +50,24 @@ o en lenguaje natural, por ejemplo:
 
 La skill deriva el nombre de carpeta/rama (o respeta el que le des explícito),
 detecta la rama base real del repo (nunca asume `develop`/`main`), verifica que
-no exista ya esa carpeta o rama, se asegura de que `worktrees/` esté en el
+no exista ya esa carpeta o rama, se asegura de que `.worktrees/` esté en el
 `.gitignore` del repo destino, y solo entonces corre
-`git worktree add -b <feature> worktrees/<feature> origin/<rama-base>`.
+`git worktree add -b <feature> .worktrees/<feature> origin/<rama-base>`.
 
 ### Salida
 
 ```text
-worktrees/
+.worktrees/
 └── <feature>/   # checkout nuevo, rama <feature> creada a partir de <rama-base>
 ```
 
-Más la línea `worktrees/` agregada al `.gitignore` del repo destino, si no
+Más la línea `.worktrees/` agregada al `.gitignore` del repo destino, si no
 estaba ya.
 
 ## Límites (explícitos)
 
 - No asume rama base por defecto — la detecta (`gh repo view` / `git remote show origin`) o pregunta si hay ambigüedad.
 - No crea el worktree si ya existe una carpeta o rama con ese nombre sin confirmar antes con el usuario.
-- No sube `worktrees/` al remoto ni modifica ramas existentes — solo agrega una rama y un checkout local nuevos.
+- No sube `.worktrees/` al remoto ni modifica ramas existentes — solo agrega una rama y un checkout local nuevos.
 
 Licencia: MIT · Bambu Tech Services.
