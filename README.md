@@ -12,7 +12,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT" />
-  <img src="https://img.shields.io/badge/skills-6-7c3aed.svg" alt="Skills: 6" />
+  <img src="https://img.shields.io/badge/skills-7-7c3aed.svg" alt="Skills: 7" />
   <img src="https://img.shields.io/badge/agent-Claude%20Code-d97757.svg" alt="Claude Code" />
 </p>
 
@@ -39,6 +39,7 @@ npx skills add Bambu-Developers/skills/bambu-e2e-test-matrix
 npx skills add Bambu-Developers/skills/bambu-nest-rules
 npx skills add Bambu-Developers/skills/bambu-nest-test
 npx skills add Bambu-Developers/skills/bambu-readme-generator
+npx skills add Bambu-Developers/skills/bambu-security-setup
 npx skills add Bambu-Developers/skills/bambu-snyk-dependency-hardening
 npx skills add Bambu-Developers/skills/bambu-terraform-aws
 ```
@@ -61,6 +62,7 @@ Once installed, the agent will leverage each skill automatically when a matching
 | [**bambu-nest-rules**](./bambu-nest-rules) | Project-specific conventions for our NestJS + Prisma monorepo — dynamic-module libs, Secrets Manager, typed envs, i18n, error handling, DI, and thin controllers. |
 | [**bambu-nest-test**](./bambu-nest-test) | Canonical unit-testing patterns for our NestJS + Prisma monorepo — DTO, service, controller, and module tests. |
 | [**bambu-readme-generator**](./bambu-readme-generator) | Regenerates a project's root `README.md` by autodiscovering its real state — language, layout, and scripts. |
+| [**bambu-security-setup**](./bambu-security-setup) | Bootstraps (or audits) Snyk dependency-scanning CI for any repo — detects package manager/stack, generates the blocking GitHub Actions workflow plus weekly schedule, `.snyk` CODEOWNERS, `SNYK_TOKEN` secret, and security-team repo access. |
 | [**bambu-snyk-dependency-hardening**](./bambu-snyk-dependency-hardening) | Portable decision framework for triaging and remediating Snyk (or equivalent SCA) findings in third-party dependencies — upgrade vs. documented exception, verifying an upgrade is actually safe, and writing well-formed `.snyk` ignore entries with severity-based expiration. |
 | [**bambu-terraform-aws**](./bambu-terraform-aws) | Reusable, project-agnostic conventions for generating, modifying, and reviewing Terraform infrastructure on AWS — modules, environments, networking, security groups, tagging, and the interchangeable compute layer. |
 
@@ -79,6 +81,10 @@ Unit-testing patterns for the Bambu NestJS monorepo. Covers `plainToInstance` + 
 ### bambu-readme-generator
 
 Language- and framework-agnostic README generator. It inspects manifests (`package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, …), maps the repo layout, extracts runnable scripts, and renders a canonical README from a template — treating the existing one as a stale snapshot. Load it when you ask to "generate", "update", or "refresh" the project README.
+
+### bambu-security-setup
+
+Portable bootstrap for Snyk dependency-scanning CI on any repo — backend or frontend, monorepo or single package, npm/yarn classic/yarn berry/pnpm/bun. Detects the package manager, runtime, monorepo layout, and protected branches before writing anything, then generates a GitHub Actions workflow that blocks PRs on high/critical vulnerabilities and runs weekly on its own, plus a `.snyk` CODEOWNERS line. Also walks through the governance steps that need explicit confirmation: security-team repo access, the `SNYK_TOKEN` secret, and what's left to configure manually (branch protection). Load it when you ask to "add Snyk", "set up security scanning", "replicate the security workflow to another repo", or "set the SNYK_TOKEN".
 
 ### bambu-snyk-dependency-hardening
 
@@ -106,6 +112,10 @@ skills/
 ├── bambu-readme-generator/   # README generator
 │   ├── SKILL.md
 │   └── templates/            # skeleton + section recipes
+├── bambu-security-setup/     # Snyk dependency-scanning CI bootstrap
+│   ├── SKILL.md
+│   ├── references/           # package-manager detection + GitHub governance
+│   └── assets/                # workflow + CODEOWNERS templates
 ├── bambu-snyk-dependency-hardening/  # Snyk/SCA dependency triage & remediation
 │   ├── SKILL.md
 │   └── README.md              # how the skill triggers (auto vs. explicit)
