@@ -12,7 +12,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT" />
-  <img src="https://img.shields.io/badge/skills-10-7c3aed.svg" alt="Skills: 10" />
+  <img src="https://img.shields.io/badge/skills-12-7c3aed.svg" alt="Skills: 12" />
   <img src="https://img.shields.io/badge/agent-Claude%20Code-d97757.svg" alt="Claude Code" />
 </p>
 
@@ -43,6 +43,8 @@ npx skills add Bambu-Developers/skills/bambu-nest-test
 npx skills add Bambu-Developers/skills/bambu-readme-generator
 npx skills add Bambu-Developers/skills/bambu-security-setup
 npx skills add Bambu-Developers/skills/bambu-snyk-dependency-hardening
+npx skills add Bambu-Developers/skills/bambu-spec-define
+npx skills add Bambu-Developers/skills/bambu-spec-implement
 npx skills add Bambu-Developers/skills/bambu-terraform-aws
 npx skills add Bambu-Developers/skills/bambu-worktree
 ```
@@ -69,6 +71,8 @@ Once installed, the agent will leverage each skill automatically when a matching
 | [**bambu-readme-generator**](./bambu-readme-generator) | Regenerates a project's root `README.md` by autodiscovering its real state — language, layout, and scripts. |
 | [**bambu-security-setup**](./bambu-security-setup) | Bootstraps (or audits) Snyk dependency-scanning CI for any repo — detects package manager/stack, generates the blocking GitHub Actions workflow plus weekly schedule, `.snyk` CODEOWNERS, `SNYK_TOKEN` secret, and security-team repo access. |
 | [**bambu-snyk-dependency-hardening**](./bambu-snyk-dependency-hardening) | Portable decision framework for triaging and remediating Snyk (or equivalent SCA) findings in third-party dependencies — upgrade vs. documented exception, verifying an upgrade is actually safe, and writing well-formed `.snyk` ignore entries with severity-based expiration. |
+| [**bambu-spec-define**](./bambu-spec-define) | The slow half of a spec-driven-design flow — Socratic, section-by-section authoring of a `SPEC NN` contract (context, goals, non-goals, requirements, interfaces, edge cases, acceptance criteria), with a Draft→In review→Approved→Implemented→Obsolete lifecycle gate. |
+| [**bambu-spec-implement**](./bambu-spec-implement) | The fast half of that same flow — refuses to start unless the spec (and its dependencies) is Approved, executes its contract as written with no re-litigating design, and flips it to Implemented on completion. |
 | [**bambu-terraform-aws**](./bambu-terraform-aws) | Reusable, project-agnostic conventions for generating, modifying, and reviewing Terraform infrastructure on AWS — modules, environments, networking, security groups, tagging, and the interchangeable compute layer. |
 | [**bambu-worktree**](./bambu-worktree) | Creates an isolated `git worktree` under `.worktrees/<feature>/` with its own branch, from a short requirement description or an explicit branch name, to work on several things in parallel without repeated stash/checkout. |
 
@@ -103,6 +107,14 @@ Portable bootstrap for Snyk dependency-scanning CI on any repo — backend or fr
 ### bambu-snyk-dependency-hardening
 
 Generic, project-agnostic decision framework for triaging vulnerability findings reported by Snyk or an equivalent SCA tool (`npm audit`, etc.) in third-party dependencies. For each finding it walks a fixed decision tree: check whether a safe upgrade exists (verifying real breaking changes and toolchain compatibility — e.g. an ESM/CJS mismatch — not just the advisory text, then running the tests of every real consumer); if not, judge real exploitability at the actual call site rather than trusting the advisory; and if genuinely non-exploitable, document a well-formed `.snyk` ignore entry with a technical `reason` and an `expires` date set by severity (7 days for Critical/High, 30 days for Medium/Low). It also covers gating changes to the ignore-policy file behind CODEOWNERS. It never lowers the scanner's severity threshold and never commits/pushes on its own. Load it when a Snyk/SCA check fails, when deciding upgrade vs. exception for a vulnerable dependency, or when writing/reviewing a `.snyk` policy change.
+
+### bambu-spec-define
+
+The deliberately slow half of a spec-driven-design flow: before any code is written, it authors and maintains a `SPEC NN` file as the contract that later execution follows. Works section by section against `templates/SPEC.template.md`, using `templates/section-recipes.md` as a Socratic checklist — Context, Goals, Non-goals, Dependencies, Functional requirements, Interfaces & contracts, Non-functional requirements, Edge cases, Acceptance criteria, Risks, Open questions — pushing back on vague answers instead of auto-filling from code (there usually isn't any yet). Assigns the sequential `SPEC NN` number, validates `Depends on:` cross-references, and owns the status lifecycle (Draft → In review → Approved → Implemented → Obsolete, English or Spanish labels accepted and normalized on write), refusing to self-approve or to let a non-empty Open Questions section reach Approved. Never writes application code — that handoff goes to **bambu-spec-implement** once a spec is Approved. Load it when you ask to "write a spec for…", "let's spec out…", "send this spec to review", "approve SPEC 04", or mention a `SPEC NN` / `specs/` file explicitly.
+
+### bambu-spec-implement
+
+The fast half of the same flow: consumes an Approved `SPEC NN` as its contract and executes it, without re-litigating decisions the spec already made. Hard-refuses to start against a spec that isn't Approved (Draft, In review, Obsolete) — or whose `Depends on:` references aren't themselves Approved/Implemented — and reports exactly what's missing instead of proceeding on a best-effort basis. Treats Interfaces & contracts, Functional requirements, and Edge cases as the literal spec to build, Non-goals as out of bounds even mid-implementation, and Acceptance criteria as the checklist it verifies against before reporting done. On completion, writes back only the Status line (`Approved` → `Implemented`) plus a one-line PR/commit reference — it never edits a spec's substantive sections; a gap found later becomes a new spec, not a silent rewrite. Pairs with **bambu-spec-define**. Load it when you ask to "implement SPEC 04", "build SPEC 04", or there's an Approved spec ready to execute.
 
 ### bambu-terraform-aws
 
@@ -145,6 +157,13 @@ skills/
 ├── bambu-snyk-dependency-hardening/  # Snyk/SCA dependency triage & remediation
 │   ├── SKILL.md
 │   └── README.md              # how the skill triggers (auto vs. explicit)
+├── bambu-spec-define/        # spec-driven design — slow half (spec authoring)
+│   ├── SKILL.md
+│   ├── README.md
+│   └── templates/            # SPEC.template.md + Socratic section recipes
+├── bambu-spec-implement/     # spec-driven design — fast half (execution)
+│   ├── SKILL.md
+│   └── README.md
 ├── bambu-terraform-aws/      # Terraform/AWS infrastructure conventions
 │   ├── SKILL.md
 │   └── rules/                # progressively-disclosed rule files
