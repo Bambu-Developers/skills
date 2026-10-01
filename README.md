@@ -70,7 +70,7 @@ Once installed, the agent will leverage each skill automatically when a matching
 | [**bambu-security-setup**](./bambu-security-setup) | Bootstraps (or audits) Snyk dependency-scanning CI for any repo — detects package manager/stack, generates the blocking GitHub Actions workflow plus weekly schedule, `.snyk` CODEOWNERS, `SNYK_TOKEN` secret, and security-team repo access. |
 | [**bambu-snyk-dependency-hardening**](./bambu-snyk-dependency-hardening) | Portable decision framework for triaging and remediating Snyk (or equivalent SCA) findings in third-party dependencies — upgrade vs. documented exception, verifying an upgrade is actually safe, and writing well-formed `.snyk` ignore entries with severity-based expiration. |
 | [**bambu-terraform-aws**](./bambu-terraform-aws) | Reusable, project-agnostic conventions for generating, modifying, and reviewing Terraform infrastructure on AWS — modules, environments, networking, security groups, tagging, and the interchangeable compute layer. |
-| [**bambu-worktree**](./bambu-worktree) | Creates an isolated `git worktree` under `worktrees/<feature>/` with its own branch, from a short requirement description or an explicit branch name, to work on several things in parallel without repeated stash/checkout. |
+| [**bambu-worktree**](./bambu-worktree) | Creates an isolated `git worktree` under `.worktrees/<feature>/` with its own branch, from a short requirement description or an explicit branch name, to work on several things in parallel without repeated stash/checkout. |
 
 ### bambu-e2e-test-matrix
 
@@ -110,7 +110,7 @@ Reusable, project-agnostic conventions for Terraform on AWS. Covers module and e
 
 ### bambu-worktree
 
-Project-agnostic skill that creates an isolated `git worktree` under `worktrees/<feature>/`, with its own branch, from a short requirement description (auto-slugified to kebab-case) or an explicit branch/folder name the user already has in mind. Detects the repo's real default branch instead of hardcoding `develop`/`main`, guards against folder/branch name collisions before creating anything, and makes sure `worktrees/` is gitignored in the target repo. Load it when you ask to "create a worktree", "work on multiple things in parallel", "isolate this feature in its own folder", or "give me a separate checkout for X".
+Project-agnostic skill that creates an isolated `git worktree` under `.worktrees/<feature>/`, with its own branch, from a short requirement description (auto-slugified to kebab-case) or an explicit branch/folder name the user already has in mind. Detects the repo's real default branch instead of hardcoding `develop`/`main`, guards against folder/branch name collisions before creating anything, and makes sure `.worktrees/` is gitignored in the target repo. Load it when you ask to "create a worktree", "work on multiple things in parallel", "isolate this feature in its own folder", or "give me a separate checkout for X".
 
 ## Repository layout
 
