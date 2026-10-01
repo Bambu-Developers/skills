@@ -22,7 +22,7 @@ Skill que crea ramas y abre PRs **cumpliendo la Política de Estrategia de Branc
 ## Antes de cualquier acción con efecto
 
 - **Confirma con el usuario** antes de crear la rama remota o de abrir el PR — enséñale el nombre propuesto, la base, y el método de merge esperado antes de ejecutar.
-- Antes de cambiar de rama o hacer `pull`, corre `git status`: si hay cambios sin commitear, detente y pregunta (stash/commit) en vez de perderlos.
+- Antes de cambiar de rama o hacer `pull`, corre `git status`: si hay cambios sin commitear, detente y pregunta (stash/commit) en vez de perderlos. `scripts/create-branch.sh` ya aplica esta guarda él mismo (aborta si el working tree no está limpio, incluso si ya estás parado en la base) — no la saltees invocando git a mano.
 - Si el repo pertenece a un cliente con un flujo de branching distinto al de esta política, dilo explícitamente: **la desviación requiere una solicitud escrita aprobada por el líder técnico y el CISO** — la skill no la aplica por su cuenta ni asume que "este repo es diferente" sin esa aprobación documentada.
 - Esta skill asume `git` y GitHub CLI (`gh`) autenticado (`gh auth status`). Si falta, dilo y detente.
 
@@ -34,7 +34,7 @@ Skill que crea ramas y abre PRs **cumpliendo la Política de Estrategia de Branc
 2. Determina la **base**: `dev` para todo excepto `hotfix`, que parte de `main`.
 3. Pide o infiere **módulo** y **descripción** (resumen breve, en **inglés**, kebab-case) y el **ticket** si lo hay (va al final del nombre).
 4. Corre `scripts/validate-branch-name.sh "<tipo>/<modulo>-<descripcion>[-<ticket>]"`. Si falla (formato o >50 caracteres), muestra el motivo y propón una descripción más corta — no la crees hasta que pase.
-5. Con el nombre validado y confirmado por el usuario, corre `scripts/create-branch.sh <tipo> <modulo> <descripcion> [ticket]` — actualiza la base (`fetch` + `checkout` + `pull --ff-only`) y crea la rama.
+5. Con el nombre validado y confirmado por el usuario, corre `scripts/create-branch.sh <tipo> <modulo> <descripcion> [ticket]` — el script aborta si el working tree tiene cambios sin commitear (incluso si ya estabas parado en la base), actualiza la base (`fetch` + `checkout` + `pull --ff-only`), confirma que quedó parado exactamente en esa base antes de ramificar, y recién entonces crea la rama.
 6. Recuerda el plazo de vida (**5 días hábiles**; **1 día hábil** si es `hotfix`, sin considerar feriados) y que el PR debe abrirse **en borrador desde el primer push**.
 
 ### Flujo B — Abrir PR de una rama de desarrollo

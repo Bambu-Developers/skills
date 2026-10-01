@@ -39,9 +39,29 @@ if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
   exit 1
 fi
 
+# El working tree debe estar limpio antes de tocar la base — si ya estás parado
+# en $base (el caso más común) un pull/checkout con cambios sin commitear puede
+# fallar a medias o arrastrar esos cambios a la rama nueva sin querer.
+if [[ -n "$(git status --porcelain)" ]]; then
+  echo "ERROR: hay cambios sin commitear en el working tree." >&2
+  git status --short >&2
+  echo "Commitea o guarda en stash (git stash -u) antes de crear la rama." >&2
+  exit 1
+fi
+
 git fetch origin "$base"
 git checkout "$base"
 git pull --ff-only origin "$base"
+
+# Confirma que efectivamente quedaste parado en la base esperada antes de
+# ramificar — para que la rama nueva salga de donde dice que sale.
+current="$(git branch --show-current)"
+if [[ "$current" != "$base" ]]; then
+  echo "ERROR: se esperaba estar en '$base' pero el repo quedó en '$current'." >&2
+  exit 1
+fi
+echo "Partiendo de '$base' en $(git rev-parse --short HEAD)."
+
 git checkout -b "$branch"
 
 echo "Rama creada: $branch (desde $base, actualizado)"
