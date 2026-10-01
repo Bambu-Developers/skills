@@ -12,7 +12,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT" />
-  <img src="https://img.shields.io/badge/skills-9-7c3aed.svg" alt="Skills: 9" />
+  <img src="https://img.shields.io/badge/skills-10-7c3aed.svg" alt="Skills: 10" />
   <img src="https://img.shields.io/badge/agent-Claude%20Code-d97757.svg" alt="Claude Code" />
 </p>
 
@@ -36,6 +36,7 @@ Or install an individual skill by name:
 
 ```bash
 npx skills add Bambu-Developers/skills/bambu-e2e-test-matrix
+npx skills add Bambu-Developers/skills/bambu-git-flow
 npx skills add Bambu-Developers/skills/bambu-nest-api-guide
 npx skills add Bambu-Developers/skills/bambu-nest-rules
 npx skills add Bambu-Developers/skills/bambu-nest-test
@@ -61,6 +62,7 @@ Once installed, the agent will leverage each skill automatically when a matching
 | Skill | What it does |
 |-------|--------------|
 | [**bambu-e2e-test-matrix**](./bambu-e2e-test-matrix) | Generates and runs manual E2E test matrices (flow, usability, visual, accessibility, edge cases) against any web app via Playwright MCP — batch execution with continuous video evidence, optional Figma diffs and SAST security analysis, and a final scoring/ranking. |
+| [**bambu-git-flow**](./bambu-git-flow) | Creates branches and opens draft PRs per Bambu's internal Branching Strategy Policy — infers type/base, validates the naming convention, runs the policy's pre-checks, and sets the right merge method and version label. |
 | [**bambu-nest-api-guide**](./bambu-nest-api-guide) | Diffs a git range in our NestJS + Prisma monorepo, classifies every touched endpoint (new/modified/removed, breaking vs. additive), and publishes a frontend-facing API integration guide as an Artifact. |
 | [**bambu-nest-rules**](./bambu-nest-rules) | Project-specific conventions for our NestJS + Prisma monorepo — dynamic-module libs, Secrets Manager, typed envs, i18n, error handling, DI, and thin controllers. |
 | [**bambu-nest-test**](./bambu-nest-test) | Canonical unit-testing patterns for our NestJS + Prisma monorepo — DTO, service, controller, and module tests. |
@@ -73,6 +75,10 @@ Once installed, the agent will leverage each skill automatically when a matching
 ### bambu-e2e-test-matrix
 
 Generic, self-contained skill for **manual E2E QA** on any web application. It runs in two phases: first it explores the site (and optionally the source repo, read-only) and proposes a test matrix (`matriz-pruebas.csv`) covering functional, flow, usability, visual, accessibility, and edge/negative cases — then, only after you approve it, it executes. Execution is delegated to sub-agents batch by batch (one module per `e2e-runner`; the orchestrator only coordinates, never navigates), records **one continuous video per module** as evidence, checkpoints progress to `ESTADO-CORRIDA.md` so a run can resume where it left off, and enforces a completeness gate so no approved case is silently left pending. It can optionally diff screens against a **Figma** design and run static **SAST** security analysis (OWASP Top 10, CWE Top 25, hardcoded secrets, dependency CVEs), and closes with a 0–100 score, letter grade, and per-module ranking. Everything is saved locally; it **never modifies** the code of the app under test. Requires the Playwright MCP (see the extra setup step under [Installation](#installation)). Load it when you ask for an "E2E test matrix", "flow/usability testing", "test a site", "video test evidence", "compare the UI against Figma", or "SAST/security analysis of the code".
+
+### bambu-git-flow
+
+Creates branches and opens Pull Requests in any Bambu repo following the internal **Branching Strategy Policy** (v0.1, draft): infers the branch type (feature/fix/hotfix/refactor/chore/docs), picks the right base (`dev`, or `main` for hotfixes), validates the `<type>/<module>-<description>[-<ticket>]` naming convention (kebab-case, ≤ 50 chars) via a bundled script, and opens the PR as a **draft** with the destination, merge method, and version label (`major`/`minor`/`patch`) that the integration type calls for — running the policy's pre-checks first (open-PR count, diff size, oversized files) so the pipeline doesn't reject them later. Also covers hotfixes from `main`, `dev → qa → main` promotions, `main → qa → dev` sync-downs, and diagnosing an existing branch name or PR against the policy. It never merges, approves, force-pushes, or bypasses branch protections — those stay human decisions. Load it when you ask to "create a branch for…", "open the PR", "hotfix for…", "promote dev to qa", "sync main to dev", or "check my branch name".
 
 ### bambu-nest-api-guide
 
@@ -115,6 +121,11 @@ skills/
 │   ├── scripts/              # setup.sh — one-time Playwright MCP config
 │   ├── references/           # browser/visual/a11y/SAST guides + agents/ profiles
 │   └── assets/templates/     # matriz-pruebas.csv · ESTADO-CORRIDA.md · reporte.md
+├── bambu-git-flow/           # branch/PR creation per Bambu's branching policy
+│   ├── SKILL.md
+│   ├── references/            # full policy rules + v0.1 open points
+│   ├── assets/                 # PR description template
+│   └── scripts/                 # validate-branch-name.sh · create-branch.sh · create-pr.sh
 ├── bambu-nest-api-guide/     # frontend API integration guide (git diff → Artifact)
 │   ├── SKILL.md
 │   └── references/            # API-relevant-files detection + breaking-change taxonomy
