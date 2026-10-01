@@ -12,7 +12,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT" />
-  <img src="https://img.shields.io/badge/skills-7-7c3aed.svg" alt="Skills: 7" />
+  <img src="https://img.shields.io/badge/skills-9-7c3aed.svg" alt="Skills: 9" />
   <img src="https://img.shields.io/badge/agent-Claude%20Code-d97757.svg" alt="Claude Code" />
 </p>
 
@@ -36,12 +36,14 @@ Or install an individual skill by name:
 
 ```bash
 npx skills add Bambu-Developers/skills/bambu-e2e-test-matrix
+npx skills add Bambu-Developers/skills/bambu-nest-api-guide
 npx skills add Bambu-Developers/skills/bambu-nest-rules
 npx skills add Bambu-Developers/skills/bambu-nest-test
 npx skills add Bambu-Developers/skills/bambu-readme-generator
 npx skills add Bambu-Developers/skills/bambu-security-setup
 npx skills add Bambu-Developers/skills/bambu-snyk-dependency-hardening
 npx skills add Bambu-Developers/skills/bambu-terraform-aws
+npx skills add Bambu-Developers/skills/bambu-worktree
 ```
 
 Once installed, the agent will leverage each skill automatically when a matching task comes up — no manual invocation required.
@@ -59,16 +61,22 @@ Once installed, the agent will leverage each skill automatically when a matching
 | Skill | What it does |
 |-------|--------------|
 | [**bambu-e2e-test-matrix**](./bambu-e2e-test-matrix) | Generates and runs manual E2E test matrices (flow, usability, visual, accessibility, edge cases) against any web app via Playwright MCP — batch execution with continuous video evidence, optional Figma diffs and SAST security analysis, and a final scoring/ranking. |
+| [**bambu-nest-api-guide**](./bambu-nest-api-guide) | Diffs a git range in our NestJS + Prisma monorepo, classifies every touched endpoint (new/modified/removed, breaking vs. additive), and publishes a frontend-facing API integration guide as an Artifact. |
 | [**bambu-nest-rules**](./bambu-nest-rules) | Project-specific conventions for our NestJS + Prisma monorepo — dynamic-module libs, Secrets Manager, typed envs, i18n, error handling, DI, and thin controllers. |
 | [**bambu-nest-test**](./bambu-nest-test) | Canonical unit-testing patterns for our NestJS + Prisma monorepo — DTO, service, controller, and module tests. |
 | [**bambu-readme-generator**](./bambu-readme-generator) | Regenerates a project's root `README.md` by autodiscovering its real state — language, layout, and scripts. |
 | [**bambu-security-setup**](./bambu-security-setup) | Bootstraps (or audits) Snyk dependency-scanning CI for any repo — detects package manager/stack, generates the blocking GitHub Actions workflow plus weekly schedule, `.snyk` CODEOWNERS, `SNYK_TOKEN` secret, and security-team repo access. |
 | [**bambu-snyk-dependency-hardening**](./bambu-snyk-dependency-hardening) | Portable decision framework for triaging and remediating Snyk (or equivalent SCA) findings in third-party dependencies — upgrade vs. documented exception, verifying an upgrade is actually safe, and writing well-formed `.snyk` ignore entries with severity-based expiration. |
 | [**bambu-terraform-aws**](./bambu-terraform-aws) | Reusable, project-agnostic conventions for generating, modifying, and reviewing Terraform infrastructure on AWS — modules, environments, networking, security groups, tagging, and the interchangeable compute layer. |
+| [**bambu-worktree**](./bambu-worktree) | Creates an isolated `git worktree` under `worktrees/<feature>/` with its own branch, from a short requirement description or an explicit branch name, to work on several things in parallel without repeated stash/checkout. |
 
 ### bambu-e2e-test-matrix
 
 Generic, self-contained skill for **manual E2E QA** on any web application. It runs in two phases: first it explores the site (and optionally the source repo, read-only) and proposes a test matrix (`matriz-pruebas.csv`) covering functional, flow, usability, visual, accessibility, and edge/negative cases — then, only after you approve it, it executes. Execution is delegated to sub-agents batch by batch (one module per `e2e-runner`; the orchestrator only coordinates, never navigates), records **one continuous video per module** as evidence, checkpoints progress to `ESTADO-CORRIDA.md` so a run can resume where it left off, and enforces a completeness gate so no approved case is silently left pending. It can optionally diff screens against a **Figma** design and run static **SAST** security analysis (OWASP Top 10, CWE Top 25, hardcoded secrets, dependency CVEs), and closes with a 0–100 score, letter grade, and per-module ranking. Everything is saved locally; it **never modifies** the code of the app under test. Requires the Playwright MCP (see the extra setup step under [Installation](#installation)). Load it when you ask for an "E2E test matrix", "flow/usability testing", "test a site", "video test evidence", "compare the UI against Figma", or "SAST/security analysis of the code".
+
+### bambu-nest-api-guide
+
+Read-only-on-git skill for the Bambu NestJS + Prisma monorepo. Resolves a git comparison range (explicit, or auto-detected via upstream/merge-base against long-lived branches), diffs controllers and DTOs, classifies every touched endpoint as new/modified/removed, flags breaking vs. additive changes against a fixed taxonomy (removed/renamed response fields, request fields turned required, changed types, removed enum values, stricter auth guards, changed success status codes, …), and publishes the result as a frontend-facing API integration guide via the `Artifact` tool — breaking changes surfaced first, both in the artifact and in the chat summary. Load it when you ask to "generate the API guide for frontend", "document what changed in the API for this PR", or "what does this change break for frontend".
 
 ### bambu-nest-rules
 
@@ -94,6 +102,10 @@ Generic, project-agnostic decision framework for triaging vulnerability findings
 
 Reusable, project-agnostic conventions for Terraform on AWS. Covers module and environment structure, naming, two-layer tagging, `for_each`/`count` iteration and deterministic outputs, a 3-layer VPC with private data tiers, one-SG-per-component security groups with SG-to-SG references, a non-negotiable Well-Architected security baseline (private networking, encryption, secrets, least-privilege IAM), and an interchangeable application/compute layer (Lambda / Fargate / EC2 / EKS) on a common base. Load it when creating or reviewing modules under `modules/` or environments under `environments/`, wiring the VPC, subnets, or security groups, or choosing/switching the compute layer.
 
+### bambu-worktree
+
+Project-agnostic skill that creates an isolated `git worktree` under `worktrees/<feature>/`, with its own branch, from a short requirement description (auto-slugified to kebab-case) or an explicit branch/folder name the user already has in mind. Detects the repo's real default branch instead of hardcoding `develop`/`main`, guards against folder/branch name collisions before creating anything, and makes sure `worktrees/` is gitignored in the target repo. Load it when you ask to "create a worktree", "work on multiple things in parallel", "isolate this feature in its own folder", or "give me a separate checkout for X".
+
 ## Repository layout
 
 ```
@@ -103,6 +115,9 @@ skills/
 │   ├── scripts/              # setup.sh — one-time Playwright MCP config
 │   ├── references/           # browser/visual/a11y/SAST guides + agents/ profiles
 │   └── assets/templates/     # matriz-pruebas.csv · ESTADO-CORRIDA.md · reporte.md
+├── bambu-nest-api-guide/     # frontend API integration guide (git diff → Artifact)
+│   ├── SKILL.md
+│   └── references/            # API-relevant-files detection + breaking-change taxonomy
 ├── bambu-nest-rules/         # NestJS project conventions
 │   ├── SKILL.md
 │   └── rules/                # progressively-disclosed rule files
@@ -122,6 +137,9 @@ skills/
 ├── bambu-terraform-aws/      # Terraform/AWS infrastructure conventions
 │   ├── SKILL.md
 │   └── rules/                # progressively-disclosed rule files
+├── bambu-worktree/           # isolated git worktree creation
+│   ├── SKILL.md
+│   └── README.md              # install + usage examples
 └── CLAUDE.md                 # guidance for agents working in THIS repo
 ```
 
