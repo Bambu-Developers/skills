@@ -32,6 +32,7 @@ Each top-level directory is one self-contained skill:
 
 - `bambu-nest-rules/` — project-specific conventions for the NestJS + Prisma monorepo (dynamic-module libs, Secrets Manager, typed envs, i18n, DI, thin controllers). Specific to that *consumer* monorepo, not to this repo.
 - `bambu-nest-test/` — unit-testing patterns for a NestJS + Prisma + nestjs-i18n monorepo (DTO / service / controller / module tests). The patterns it documents are specific to that *consumer* monorepo, not to this repo.
+- `bambu-nest-api-guide/` — read-only-on-git skill for that same NestJS + Prisma monorepo: diffs a git range, classifies every touched endpoint (new/modified/removed) and breaking vs. additive changes, then publishes a frontend-facing API integration guide as an Artifact. Specific to that *consumer* monorepo, not to this repo.
 - `bambu-readme-generator/` — language-agnostic root `README.md` generator that autodiscovers stack, layout, and scripts from the filesystem.
 - `bambu-security-setup/` — bootstraps (or audits) Snyk dependency-scanning CI for any repo: detects package manager/runtime/monorepo layout, generates the blocking GitHub Actions workflow + weekly schedule, `.snyk` CODEOWNERS, `SNYK_TOKEN` secret, and security-team access. Project-agnostic, like `bambu-terraform-aws`.
 - `bambu-terraform-aws/` — reusable, project-agnostic conventions for generating, modifying, and reviewing Terraform infrastructure on AWS (modules, environments, VPC/networking, security groups, tagging, interchangeable compute layer).
