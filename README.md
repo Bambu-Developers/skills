@@ -12,7 +12,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT" />
-  <img src="https://img.shields.io/badge/skills-7-7c3aed.svg" alt="Skills: 7" />
+  <img src="https://img.shields.io/badge/skills-8-7c3aed.svg" alt="Skills: 8" />
   <img src="https://img.shields.io/badge/agent-Claude%20Code-d97757.svg" alt="Claude Code" />
 </p>
 
@@ -42,6 +42,7 @@ npx skills add Bambu-Developers/skills/bambu-readme-generator
 npx skills add Bambu-Developers/skills/bambu-security-setup
 npx skills add Bambu-Developers/skills/bambu-snyk-dependency-hardening
 npx skills add Bambu-Developers/skills/bambu-terraform-aws
+npx skills add Bambu-Developers/skills/bambu-worktree
 ```
 
 Once installed, the agent will leverage each skill automatically when a matching task comes up — no manual invocation required.
@@ -65,6 +66,7 @@ Once installed, the agent will leverage each skill automatically when a matching
 | [**bambu-security-setup**](./bambu-security-setup) | Bootstraps (or audits) Snyk dependency-scanning CI for any repo — detects package manager/stack, generates the blocking GitHub Actions workflow plus weekly schedule, `.snyk` CODEOWNERS, `SNYK_TOKEN` secret, and security-team repo access. |
 | [**bambu-snyk-dependency-hardening**](./bambu-snyk-dependency-hardening) | Portable decision framework for triaging and remediating Snyk (or equivalent SCA) findings in third-party dependencies — upgrade vs. documented exception, verifying an upgrade is actually safe, and writing well-formed `.snyk` ignore entries with severity-based expiration. |
 | [**bambu-terraform-aws**](./bambu-terraform-aws) | Reusable, project-agnostic conventions for generating, modifying, and reviewing Terraform infrastructure on AWS — modules, environments, networking, security groups, tagging, and the interchangeable compute layer. |
+| [**bambu-worktree**](./bambu-worktree) | Creates an isolated `git worktree` under `worktrees/<feature>/` with its own branch, from a short requirement description or an explicit branch name, to work on several things in parallel without repeated stash/checkout. |
 
 ### bambu-e2e-test-matrix
 
@@ -94,6 +96,10 @@ Generic, project-agnostic decision framework for triaging vulnerability findings
 
 Reusable, project-agnostic conventions for Terraform on AWS. Covers module and environment structure, naming, two-layer tagging, `for_each`/`count` iteration and deterministic outputs, a 3-layer VPC with private data tiers, one-SG-per-component security groups with SG-to-SG references, a non-negotiable Well-Architected security baseline (private networking, encryption, secrets, least-privilege IAM), and an interchangeable application/compute layer (Lambda / Fargate / EC2 / EKS) on a common base. Load it when creating or reviewing modules under `modules/` or environments under `environments/`, wiring the VPC, subnets, or security groups, or choosing/switching the compute layer.
 
+### bambu-worktree
+
+Project-agnostic skill that creates an isolated `git worktree` under `worktrees/<feature>/`, with its own branch, from a short requirement description (auto-slugified to kebab-case) or an explicit branch/folder name the user already has in mind. Detects the repo's real default branch instead of hardcoding `develop`/`main`, guards against folder/branch name collisions before creating anything, and makes sure `worktrees/` is gitignored in the target repo. Load it when you ask to "create a worktree", "work on multiple things in parallel", "isolate this feature in its own folder", or "give me a separate checkout for X".
+
 ## Repository layout
 
 ```
@@ -122,6 +128,9 @@ skills/
 ├── bambu-terraform-aws/      # Terraform/AWS infrastructure conventions
 │   ├── SKILL.md
 │   └── rules/                # progressively-disclosed rule files
+├── bambu-worktree/           # isolated git worktree creation
+│   ├── SKILL.md
+│   └── README.md              # install + usage examples
 └── CLAUDE.md                 # guidance for agents working in THIS repo
 ```
 
