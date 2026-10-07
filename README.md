@@ -12,7 +12,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT" />
-  <img src="https://img.shields.io/badge/skills-12-7c3aed.svg" alt="Skills: 12" />
+  <img src="https://img.shields.io/badge/skills-13-7c3aed.svg" alt="Skills: 13" />
   <img src="https://img.shields.io/badge/agent-Claude%20Code-d97757.svg" alt="Claude Code" />
 </p>
 
@@ -40,6 +40,7 @@ npx skills add Bambu-Developers/skills/bambu-git-flow
 npx skills add Bambu-Developers/skills/bambu-nest-api-guide
 npx skills add Bambu-Developers/skills/bambu-nest-rules
 npx skills add Bambu-Developers/skills/bambu-nest-test
+npx skills add Bambu-Developers/skills/bambu-playwright-qa-e2e
 npx skills add Bambu-Developers/skills/bambu-readme-generator
 npx skills add Bambu-Developers/skills/bambu-security-setup
 npx skills add Bambu-Developers/skills/bambu-snyk-dependency-hardening
@@ -68,6 +69,7 @@ Once installed, the agent will leverage each skill automatically when a matching
 | [**bambu-nest-api-guide**](./bambu-nest-api-guide) | Diffs a git range in our NestJS + Prisma monorepo, classifies every touched endpoint (new/modified/removed, breaking vs. additive), and publishes a frontend-facing API integration guide as an Artifact. |
 | [**bambu-nest-rules**](./bambu-nest-rules) | Project-specific conventions for our NestJS + Prisma monorepo — dynamic-module libs, Secrets Manager, typed envs, i18n, error handling, DI, and thin controllers. |
 | [**bambu-nest-test**](./bambu-nest-test) | Canonical unit-testing patterns for our NestJS + Prisma monorepo — DTO, service, controller, and module tests. |
+| [**bambu-playwright-qa-e2e**](./bambu-playwright-qa-e2e) | Generates and updates automated Playwright E2E specs for a critical flow or component in any web framework — confirms selectors and behavior against the real UI first, covers a systematic field-type edge-case catalog, and handles authenticated flows via `storageState`. |
 | [**bambu-readme-generator**](./bambu-readme-generator) | Regenerates a project's root `README.md` by autodiscovering its real state — language, layout, and scripts. |
 | [**bambu-security-setup**](./bambu-security-setup) | Bootstraps (or audits) Snyk dependency-scanning CI for any repo — detects package manager/stack, generates the blocking GitHub Actions workflow plus weekly schedule, `.snyk` CODEOWNERS, `SNYK_TOKEN` secret, and security-team repo access. |
 | [**bambu-snyk-dependency-hardening**](./bambu-snyk-dependency-hardening) | Portable decision framework for triaging and remediating Snyk (or equivalent SCA) findings in third-party dependencies — upgrade vs. documented exception, verifying an upgrade is actually safe, and writing well-formed `.snyk` ignore entries with severity-based expiration. |
@@ -95,6 +97,10 @@ Project-specific conventions for the Bambu NestJS monorepo. Covers `forRoot`/`fo
 ### bambu-nest-test
 
 Unit-testing patterns for the Bambu NestJS monorepo. Covers `plainToInstance` + `validate` for DTOs, `Test.createTestingModule` with mocked `PrismaService` and `I18nService` for services, thin-controller delegation assertions, and module DI-wiring verification. Load it when writing or reviewing tests under `apps/<service>/src/` or `libs/<lib>/src/`.
+
+### bambu-playwright-qa-e2e
+
+Generates (and updates) automated Playwright E2E suites for any web app — Angular, React, Vue, Next.js, or a framework the model doesn't recognize out of the box — from a critical flow described by the user or a specific component/screen. Detects the project's framework deterministically (`scripts/detect-framework.sh`) before assuming conventions, then confirms every selector and behavior against the real UI (via Playwright MCP or the dev server) before writing a single spec — accessible names, the exact condition under which each error message appears, debounce/autosave races, framework-specific synthetic-event gotchas (React controlled inputs, Vue `v-model`, Angular Signal Forms). Builds the case matrix from a field-type edge-case catalog (invalid email format, letters in a numeric/phone field, max length, out-of-range dates, selects with no valid option) rather than only the obvious happy path, and writes Page Objects with role/accessible-name locators — never `data-testid` unless the project already uses it. Handles flows behind login via the `storageState` pattern (a real test session, never invented credentials). Complementary to **bambu-e2e-test-matrix**, not a replacement: that skill is a manual QA orchestrator that explores and scores an app through Playwright MCP; this one authors the versioned Playwright regression suite a project's own CI actually runs. Never does real Component Testing (`mount()` + gallery) — refers to the official Microsoft skill for that when the framework supports it. Load it when you ask to "generate E2E tests for...", "test this flow", "add test cases for the login/checkout/X form", "cover the edge cases of this form", or want a component change to never silently break another part of the app.
 
 ### bambu-readme-generator
 
@@ -147,6 +153,11 @@ skills/
 ├── bambu-nest-test/          # NestJS unit-testing patterns
 │   ├── SKILL.md
 │   └── rules/                # progressively-disclosed rule files
+├── bambu-playwright-qa-e2e/  # automated Playwright E2E spec authoring
+│   ├── SKILL.md
+│   ├── README.md
+│   ├── references/           # framework detection + edge cases + page objects + auth routes
+│   └── scripts/              # detect-framework.sh
 ├── bambu-readme-generator/   # README generator
 │   ├── SKILL.md
 │   └── templates/            # skeleton + section recipes
