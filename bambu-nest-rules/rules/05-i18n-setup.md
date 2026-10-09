@@ -1,63 +1,44 @@
-# 05 — i18n setup in every HTTP-facing app
+# 05 — i18n is configured once, in the root module
 
-Every `apps/<service>/` that serves HTTP traffic imports `I18nModule.forRoot(...)` in its root module and registers the `I18nValidationPipe` + `I18nValidationExceptionFilter` in both `main.ts` and `serverless.ts`.
+i18n is registered **once**, in the app's root module (`AppModule`, or each `apps/<service>/src/<service>.module.ts` in a multi-app layout), and the validation pipe + filter are registered once wherever that app bootstraps. There is no per-feature-module duplication.
 
 ## Module setup
 
 ```ts
-// apps/<service>/src/<service>.module.ts
-import {
-  AcceptLanguageResolver,
-  HeaderResolver,
-  I18nModule,
-} from 'nestjs-i18n';
+import { HeaderResolver, I18nModule } from 'nestjs-i18n';
 import * as path from 'path';
 
-@Module({
-  imports: [
-    // ...
-    I18nModule.forRoot({
-      fallbackLanguage: 'es',
-      loaderOptions: {
-        path: path.join(__dirname, '/i18n/'),
-        watch: true,
-      },
-      resolvers: [AcceptLanguageResolver, new HeaderResolver(['x-lang'])],
-    }),
-  ],
-})
-export class ExampleModule {}
+I18nModule.forRoot({
+  fallbackLanguage: 'es',
+  loaderOptions: {
+    path: path.join(__dirname, '/i18n/'),
+    watch: true,
+  },
+  resolvers: [new HeaderResolver(['x-custom-lang'])],
+}),
 ```
 
-Notes:
+`fallbackLanguage: 'es'` and the `x-custom-lang` header are Bambu's default convention for client-facing apps (most serve Spanish-speaking end users first). Treat them as the default, not a hard constant: if the repo you're in already defines a different fallback language or header name, match what's already there instead of "fixing" it — and if you're the one setting it up for a new project, use these defaults unless the product has stated otherwise. Whichever header is chosen, whitelist it in CORS `allowedHeaders` wherever CORS is configured.
 
-- `fallbackLanguage` is **always** `'es'` in this project.
-- The `path` is `__dirname + '/i18n/'` so webpack emits the JSON next to the compiled module.
-- Both `AcceptLanguageResolver` and `HeaderResolver(['x-lang'])` must be registered.
+`path` is `__dirname + '/i18n/'` so the compiled JSON sits next to the compiled output.
 
 ## Translation files
 
 ```
-apps/<service>/src/i18n/
-├── en/
-│   ├── errors.json
-│   ├── messages.json
-│   └── validation.json
-└── es/
-    ├── errors.json
-    ├── messages.json
-    └── validation.json
+<app-root>/i18n/
+├── en/  { errors.json, messages.json, validation.json }
+└── es/  { errors.json, messages.json, validation.json }
 ```
 
-Three buckets, always:
+Three buckets, always, in every supported language:
 
-- `errors.json` — used by services when throwing `HttpException`s
-- `validation.json` — used by DTO validators (see rule 04)
-- `messages.json` — used by services for success/info responses
+- `errors.json` — service exceptions (rule 07) and the Prisma filter (rule 11)
+- `validation.json` — DTO validators (rule 04)
+- `messages.json` — success/info messages returned by services
 
-Both `en/` and `es/` directories must exist and expose the same keys. An existing-only-in-one-language key will silently fall back to the Spanish default at runtime.
+Every supported language directory must expose the **same keys**. A key present in only one language silently falls back to the configured `fallbackLanguage` at runtime.
 
-## Bootstrap wiring (main.ts AND serverless.ts)
+## Bootstrap wiring
 
 ```ts
 import { I18nValidationExceptionFilter, I18nValidationPipe } from 'nestjs-i18n';
@@ -75,18 +56,16 @@ app.useGlobalFilters(
 );
 ```
 
-The pipe options are **not negotiable** — `whitelist`, `forbidUnknownValues`, `forbidNonWhitelisted`, and `transform` must all be `true`. See rule 10 for the duplication requirement between `main.ts` and `serverless.ts`.
+The four pipe options (`whitelist`, `forbidUnknownValues`, `forbidNonWhitelisted`, `transform`, all `true`) are **not negotiable** — `whitelist` + `transform` are what make the DTO the enforced contract, and `transform` is what makes `@Type(() => Number)` and `ParseUUIDPipe` behave. If the app has more than one bootstrap entry point for the same codebase (e.g. an HTTP entry and a worker/consumer entry), keep this configuration identical across every entry point that can throw a validation error.
 
 ## Rules
 
-1. **Every HTTP-facing app** must call `I18nModule.forRoot(...)` in its root module.
-2. **Do not** omit either resolver (`AcceptLanguageResolver`, `HeaderResolver(['x-lang'])`).
-3. **Do not** change `fallbackLanguage` — it is `'es'` project-wide.
-4. **Do not** split the pipe/filter registration; both belong in `main.ts` and `serverless.ts`.
-5. Non-HTTP apps (cron jobs, SNS/S3 triggers) still need `I18nModule.forRoot(...)` if their services throw errors with `i18n.t(...)`.
+1. **Configure i18n once**, in the root module. Feature modules never call `I18nModule.forRoot(...)` again.
+2. **Match the project's existing resolver and fallback language** rather than introducing a second one.
+3. **Keep the pipe/filter configuration identical across every bootstrap entry point** that exists in the app.
+4. **Every new error/message/validation key is added to every supported language file** under the matching bucket.
 
 ## Reference
 
-- `apps/posts/src/posts.module.ts`, `apps/posts/src/main.ts`
-- `apps/auth/src/auth.module.ts`
-- `apps/streaming/src/streaming.module.ts`
+- The app's root module — `I18nModule.forRoot(...)`
+- The app's bootstrap file(s) — pipe + filter + CORS allowed headers
