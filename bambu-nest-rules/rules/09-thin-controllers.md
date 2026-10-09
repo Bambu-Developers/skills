@@ -1,112 +1,58 @@
 # 09 — Thin controllers
 
-Controllers are the HTTP adapter, nothing else. They declare the route, the guards, the status code, and hand the DTO + authenticated user to the service. No branching, no translation, no Prisma calls, no response shaping.
+Controllers are the HTTP adapter, nothing else: route, auth decorator, Swagger docs, param DTOs, and a single delegating call to a per-action service (rule 06). No branching, no translation, no Prisma, no response shaping.
 
 ## What belongs in a controller
 
-- `@Controller(...)` route prefix.
-- One method per endpoint.
-- Method decorators: `@Get/@Post/@Patch/@Delete`, optional `@HttpCode`, `@UseGuards`, `@CheckAbilities`.
-- Param decorators: `@Body()`, `@Query()`, `@Param()` — always with a DTO class (rule 04).
-- `@GetUser()` to pull the authenticated user (or `@GetUser() user?: AuthUser` with `JwtOptionalGuard`).
-- A single `return this.service.method(...)`.
+- `@ApiTags(...)` on the class, `@Controller('<prefix>')`.
+- One method per endpoint: `@Get/@Post/@Patch/@Delete`, optional `@HttpCode(HttpStatus.*)`.
+- An **auth decorator** (rule 10): `@RequireAbility('action', 'Subject')` or a platform-boundary decorator.
+- **Swagger** decorators: `@ApiBearerAuth('access-token')`, `@ApiOperation`, `@ApiOkResponse`/`@ApiCreatedResponse`/`@ApiNoContentResponse` (`{ type: XEntity }`), and the relevant error responses (`@ApiUnauthorizedResponse`, `@ApiNotFoundResponse`, …).
+- Param decorators with DTOs (rule 04); `@Param('id', ParseUUIDPipe)` for a single UUID; a decorator like `@GetUser()` for the authenticated user.
+- A single `return this.<injectedService>.<verb>(...)`.
 
 ## Canonical controller
 
 ```ts
-// apps/posts/src/posts.controller.ts
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  Patch,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
-import {
-  GetUser,
-  JwtGuard,
-  JwtOptionalGuard,
-} from '@shared/modules/auth';
-import { AuthUser } from '@shared/modules/auth/types/auth.type';
-import { AbilitiesGuard } from '@shared/modules/auth/guards/abilities.guard';
-import { CheckAbilities } from '@shared/modules/auth/decorators/check-abilities.decorator';
-import { Action } from '@shared/modules/auth/casl/casl-ability.factory';
+@ApiTags('Resources')
+@Controller('resources')
+export class ResourceController {
+  constructor(
+    private readonly create: ResourceCreateService,
+    private readonly get: ResourceGetService,
+    // …
+  ) {}
 
-@Controller()
-export class PostsController {
-  constructor(private readonly postsService: PostsService) {}
-
-  @Post('create')
-  @UseGuards(JwtGuard, AbilitiesGuard)
-  @CheckAbilities({ action: Action.Create, subject: 'Post' })
+  @Post()
+  @RequireAbility('create', 'Resource')
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() dto: CreatePostDto, @GetUser() user: AuthUser) {
-    return this.postsService.create(dto, user);
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Create a resource' })
+  @ApiCreatedResponse({ type: ResourceEntity })
+  @ApiUnauthorizedResponse({ description: 'Invalid or expired token' })
+  createResource(@Body() dto: CreateResourceDto) {
+    return this.create.create(dto);
   }
 
-  @Get('find')
-  @UseGuards(JwtOptionalGuard)
-  @HttpCode(HttpStatus.OK)
-  findAll(@Query() query: FindPostDto, @GetUser() user?: AuthUser) {
-    return this.postsService.findAll(query, user);
+  @Get(':id')
+  @RequireAbility('read', 'Resource')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Get a resource by ID' })
+  @ApiOkResponse({ type: ResourceEntity })
+  @ApiNotFoundResponse({ description: 'Resource not found' })
+  getResource(@Param('id', ParseUUIDPipe) id: string) {
+    return this.get.get(id);
   }
 }
 ```
 
 ## Rules
 
-1. **One line per method body** whenever possible: `return this.service.method(args)`.
-2. **No business logic** — no `if` on request fields, no combining responses, no Prisma calls.
-3. **Guards compose access control**: `JwtGuard` (auth required), `JwtOptionalGuard` (user may be anonymous), `AbilitiesGuard` with `@CheckAbilities({ action, subject })` for CASL checks.
-4. **Use `@HttpCode(HttpStatus.CREATED | HttpStatus.OK)`** explicitly. Default NestJS 201-for-POST / 200-for-others is acceptable, but being explicit matches the existing convention.
-5. **Return the service result directly.** Do not wrap it (`{ data: result }`) unless the service did not do so itself; for paginated lists the service returns `{ data, meta }` (see rule 04).
-6. **Do not inject `I18nService` into the controller.** Translation happens in the service (rule 06) or the validation pipe (rule 05).
-7. **Do not inject `PrismaService` into the controller.** If a controller needs it, the logic belongs in a service.
-8. **Do not catch exceptions in the controller.** Global exception filters + `I18nValidationExceptionFilter` handle formatting.
-
-## Param extraction
-
-```ts
-@Param() params: IdParamDto       // ✅ for compound param objects (recommended)
-@Param('id') id: string           // ✅ acceptable when it's a single primitive and no validation is needed
-@Body() dto: CreatePostDto        // ✅
-@Query() query: FindPostsDto      // ✅
-@Body('email') email: string      // ❌ skips the pipe
-```
-
-When you need validation on a path param, prefer an `IdParamDto` with `@IsUUID` over a bare `@Param('id')` string.
-
-## Anti-patterns
-
-```ts
-// ❌ Logic in controller
-@Post()
-async create(@Body() dto: CreatePostDto, @GetUser() user: AuthUser) {
-  if (user.role !== 'ARTIST') throw new ForbiddenException();    // ❌
-  dto.artistId = user.artist.id;                                 // ❌
-  const post = await this.prisma.post.create({ data: dto });     // ❌
-  return { data: post };                                         // ❌
-}
-
-// ❌ Translating in controller
-@Get(':id')
-async findOne(@Param('id') id: string) {
-  const post = await this.service.findOne(id);
-  if (!post) throw new NotFoundException(
-    this.i18n.t('errors.GENERAL.NOT_FOUND'),                     // ❌ belongs in service
-  );
-  return post;
-}
-```
-
-## Reference
-
-- `apps/posts/src/posts.controller.ts`
-- `apps/files/src/files.controller.ts`
-- `apps/auth/src/auth.controller.ts`
+1. **One line per method body**: `return this.<service>.<verb>(args)`. No `await` + post-processing.
+2. **No business logic** — no `if` on request fields, no combining responses, no Prisma calls, no `I18nService`.
+3. **Access control is a decorator**, not inline code. Default to `@RequireAbility(action, subject)` (rule 10); use a coarser platform-boundary decorator only for genuine platform-boundary endpoints (e.g. "my profile"). Public endpoints carry no auth decorator — be deliberate about which ones don't.
+4. **Every protected method documents `@ApiBearerAuth('access-token')`** and the response types with entity classes.
+5. **Use explicit `@HttpCode`** for non-default codes: `CREATED` on create, `NO_CONTENT` on delete.
+6. **Return the service result directly.** Don't wrap in `{ data }` — paginated services already return `{ data, meta }` via the pagination helper.
+7. **Don't inject `PrismaService` or `I18nService`** into a controller. If you need them, the logic belongs in a service.
+8. **Don't `try/catch`** in the controller — the global filters (rules 05, 11) format errors.

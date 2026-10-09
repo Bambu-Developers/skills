@@ -1,123 +1,60 @@
-# 11 — Exception filters for typed third-party errors
+# 11 — Global exception filters translate known errors
 
-When a third-party SDK throws a domain-specific exception class (AWS, Stripe, Firebase, …) that we want mapped to a localized HTTP response, write a `@Catch(...)` filter and register it via `APP_FILTER`. Never scatter `try / catch` over the Cognito/Stripe error name across services.
+Errors are formatted centrally, not with scattered `try/catch`. Two global concerns are registered once:
 
-## Canonical filter
+- `I18nValidationExceptionFilter` — DTO validation failures (rule 05, in the bootstrap file).
+- A `PrismaClientExceptionFilter` — known Prisma DB errors (registered via `APP_FILTER` in the root module).
+
+## The Prisma filter
+
+`@Catch(Prisma.PrismaClientKnownRequestError)` maps Prisma error codes to a coherent, i18n'd HTTP response so services don't repeat `error.code === 'P2002'` checks:
 
 ```ts
-// apps/auth/src/filters/cognito.filter.ts
-import { CognitoIdentityProviderServiceException } from '@aws-sdk/client-cognito-identity-provider';
-import { ArgumentsHost, Catch, ExceptionFilter, Logger } from '@nestjs/common';
-import { Response } from 'express';
-import { I18nContext, I18nService } from 'nestjs-i18n';
-import { CognitoExceptionFilterMap } from '../constants/cognito-exeptions.constant';
+@Catch(Prisma.PrismaClientKnownRequestError)
+export class PrismaClientExceptionFilter implements ExceptionFilter {
+  constructor(
+    private readonly httpAdapterHost: HttpAdapterHost,
+    private readonly i18n: I18nService,
+  ) {}
 
-@Catch(CognitoIdentityProviderServiceException)
-export class CognitoFilter implements ExceptionFilter {
-  private readonly logger = new Logger(CognitoFilter.name);
-
-  constructor(private readonly i18n: I18nService) {}
-
-  catch(
-    exception: CognitoIdentityProviderServiceException,
-    host: ArgumentsHost,
-  ) {
-    const ctx = host.switchToHttp();
-    const response = ctx.getResponse<Response>();
-
-    const { status, message: messageKey } =
-      CognitoExceptionFilterMap[exception.name] ??
-      CognitoExceptionFilterMap.DEFAULT;
-
-    const message = this.i18n.t(messageKey, {
-      lang: I18nContext.current()?.lang,
-    });
-
-    this.logger.error(
-      `Cognito Error ${exception.name}: ${exception.message}`,
-    );
-
-    response.status(status).json({ statusCode: status, message });
+  catch(exception: Prisma.PrismaClientKnownRequestError, host: ArgumentsHost) {
+    const lang = I18nContext.current()?.lang;
+    const mapped = this.map(exception.code);       // P2002/P2025/P2003 → {status, key, error}
+    if (mapped.status === HttpStatus.INTERNAL_SERVER_ERROR) {
+      this.logger.error(`Unmapped Prisma error ${exception.code}: ${exception.message}`);
+    }
+    const message = this.i18n.t(mapped.messageKey, { lang });
+    httpAdapter.reply(ctx.getResponse(), { statusCode: mapped.status, message, error: mapped.error }, mapped.status);
   }
 }
 ```
 
-## Exception → (status, i18n key) map
+Baseline mapping:
 
-Keep the mapping in `apps/<service>/src/constants/<name>-exceptions.constant.ts`. Always include a `DEFAULT` branch so unknown codes land on 500 + a generic translation key — never on an untranslated English message.
+| Prisma code | Meaning | HTTP | i18n key |
+|-------------|---------|------|----------|
+| `P2002` | unique constraint violation | 409 | `errors.GENERAL.CONFLICT` |
+| `P2025` | required record not found (update/delete) | 404 | `errors.GENERAL.NOT_FOUND` |
+| `P2003` | foreign-key violation | 409 | `errors.GENERAL.RELATED_RECORD` |
+| _default_ | anything else | 500 | `errors.GENERAL.INTERNAL` (logged) |
 
-```ts
-// apps/auth/src/constants/cognito-exeptions.constant.ts
-import { HttpStatus } from '@nestjs/common';
+When a DB-level unique or FK constraint is the real integrity guarantee for a feature (rule 08), the `P2002`/`P2003` mapping is load-bearing — don't bypass it with best-effort app-level checks only.
 
-export interface IExceptionFilterMap {
-  status: number;
-  message: string;
-}
-
-export type ExceptionFilterMap = { [key: string]: IExceptionFilterMap };
-
-export const CognitoExceptionFilterMap: ExceptionFilterMap = {
-  UsernameExistsException: {
-    status: HttpStatus.CONFLICT,
-    message: 'cognito.EXCEPTIONS.UsernameExistsException',
-  },
-  NotAuthorizedException: {
-    status: HttpStatus.UNAUTHORIZED,
-    message: 'cognito.EXCEPTIONS.NotAuthorizedException',
-  },
-  // ...
-  DEFAULT: {
-    status: HttpStatus.INTERNAL_SERVER_ERROR,
-    message: 'cognito.EXCEPTIONS.DEFAULT',
-  },
-};
-```
-
-The corresponding translations live under their own namespace in `i18n/{en,es}/` (e.g. `cognito.json`) so the keys `cognito.EXCEPTIONS.*` resolve regardless of the request language.
-
-## Registration
-
-Register the filter as a DI-backed global via `APP_FILTER` in the owning module. **Do not** `app.useGlobalFilters(new CognitoFilter(...))` — that bypasses DI and you won't have `I18nService` in the constructor.
+## Registration (DI-backed, in the root module)
 
 ```ts
-// apps/auth/src/auth.module.ts
-import { APP_FILTER } from '@nestjs/core';
-import { CognitoFilter } from './filters/cognito.filter';
-
-@Module({
-  providers: [
-    // ...
-    { provide: APP_FILTER, useClass: CognitoFilter },
-  ],
-})
-export class AuthModule {}
+providers: [
+  { provide: APP_FILTER, useClass: PrismaClientExceptionFilter },
+],
 ```
+
+Register via `APP_FILTER` (not `app.useGlobalFilters(new …())`) so the filter participates in DI and receives `I18nService` + `HttpAdapterHost`.
 
 ## Rules
 
-1. **One filter per SDK exception root class.** Use the SDK's most specific catchable base (`CognitoIdentityProviderServiceException`, `Stripe.errors.StripeError`, etc.). Do not `@Catch()` bare — that swallows everything including the validation filter.
-2. **Always resolve the message via `i18n.t(key, { lang: I18nContext.current()?.lang })`**. Never inline English strings in the JSON response.
-3. **Always include a `DEFAULT` mapping** keyed under the same namespace so new unmapped SDK errors degrade gracefully.
-4. **Register via `APP_FILTER` provider**, not via `app.useGlobalFilters(...)`, so the filter participates in DI.
-5. **Log once at `logger.error(...)`** — do not duplicate with `console.log`, and do not log the secret body of requests.
-6. **Response shape is `{ statusCode, message }`** to match the default HTTP exception output. If you add fields, add them consistently across filters.
-7. **Filter lives in `apps/<service>/src/filters/`** alongside its constants in `apps/<service>/src/constants/`.
-8. **Do not translate inside the thrown error in the service** — keep services throwing the raw SDK exception (or rethrow) so the filter is the single translation point.
-9. **Do not stack two filters that catch overlapping types.** If you extend the Cognito filter, update the map rather than adding a second filter.
-
-## Where this pattern applies next
-
-Use the same recipe for any future SDK that throws typed errors you want to render uniformly:
-
-| SDK error class | Candidate filter location |
-|-----------------|---------------------------|
-| `Stripe.errors.StripeError` | `apps/payments/src/filters/stripe.filter.ts` |
-| `FirebaseError` (FCM) | wherever Firebase is consumed |
-| Prisma `Prisma.PrismaClientKnownRequestError` | consider an app-level filter when you want to translate unique-constraint violations |
-
-## Reference
-
-- `apps/auth/src/filters/cognito.filter.ts` — canonical filter
-- `apps/auth/src/constants/cognito-exeptions.constant.ts` — canonical mapping
-- `apps/auth/src/auth.module.ts` — `APP_FILTER` registration
+1. **Let the global filter map Prisma errors.** Don't scatter `if (e.code === 'P2002')` in services — either rely on the filter, or (only for a specific domain message) pre-check with `findUnique` + a domain `ConflictException` (rule 07).
+2. **Extend the `map(code)` switch** when you need to translate a new Prisma code — add a `case` and an `errors.GENERAL.*` (or domain) key in every supported language. Always keep the `default` → 500 branch so unmapped codes degrade gracefully and get logged once.
+3. **Resolve messages via `this.i18n.t(key, { lang: I18nContext.current()?.lang })`.** Never inline a hard-coded string in the response body.
+4. **Response shape is `{ statusCode, message, error }`.** Keep it consistent if you add another filter.
+5. **Register global filters via `APP_FILTER`.** If you introduce a filter for another typed error source (e.g. a third-party SDK), give it its own `@Catch(SpecificError)` + a constants map + `APP_FILTER` entry — never `@Catch()` bare (it would swallow the validation filter too).
+6. **Log once** at `logger.error(...)`; never `console.log`, and never log request bodies or secrets.
