@@ -37,7 +37,7 @@ If unsure which mode: start in audit mode (it is read-only).
 
 | # | Rule | File |
 |---|------|------|
-| 1 | Detect platform/auth/proxy/redis first; audit checklist | `rules/01-detect-and-audit.md` |
+| 1 | Detect platform/auth/proxy/redis; check & install missing dependencies; audit checklist | `rules/01-detect-and-audit.md` |
 | 2 | Global validation pipe + security constraints on every DTO | `rules/02-dto-validation.md` |
 | 3 | Sanitize untrusted input on write; safe queries; safe uploads | `rules/03-input-sanitization.md` |
 | 4 | Rate limiting with `@nestjs/throttler` (global guard, Redis, presets) | `rules/04-rate-limiting-throttler.md` |
@@ -52,6 +52,8 @@ Templates: `templates/bootstrap-security.snippet.md` (consolidated `main.ts`), `
 
 ```
 1. Always first?     Run rule 01 detection (express|fastify, bearer|cookie auth, behind proxy?, redis?, i18n?).
+1b. Dependencies?    Check package.json for what the applicable rules need; in setup mode install the missing ones with the
+                     repo's package manager (peer-compat checked, no --force); in audit mode only report them.
 2. Global pipe?      whitelist + forbidNonWhitelisted + forbidUnknownValues + transform; detailedErrors off in prod.
 3. DTO field?        type validator + length/range cap + format validator. Arrays: ArrayMaxSize. Never `any`/bare object.
 4. Free text / HTML? Sanitize ON WRITE (plain: strip tags; rich: allowlist). Never sanitize passwords/secrets.
@@ -72,5 +74,6 @@ Templates: `templates/bootstrap-security.snippet.md` (consolidated `main.ts`), `
 - **No secrets in code or in this skill's output.** Env var *names* only.
 - **Don't invent project specifics.** Header names, origins, throttle numbers come from the target repo's env/config, with the defaults documented in the rules.
 - **Match the repo's language** for comments, i18n keys, and docs; follow its alias/layout conventions.
+- **Dependencies are part of the job (setup mode):** verify required packages first and install the missing ones with the repo's own package manager (detected from the lockfile); never hand-edit `package.json`/lockfiles, never mix managers, never use `--force`/`--legacy-peer-deps` without asking, never upgrade an already-installed package without asking. Audit mode never installs. Details: `rules/01-detect-and-audit.md`.
 - **Pin-check versions** before writing snippets: read the repo's `package.json` (`@nestjs/throttler` ≥ 6 uses `throttlers: [{ ttl (ms), limit }]`; older versions use seconds and flat `ttl/limit`).
 - Never leave an unsubstituted `{{...}}` in files emitted into a repo.

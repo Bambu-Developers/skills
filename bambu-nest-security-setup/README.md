@@ -19,9 +19,13 @@ seguridad", "protección CSRF", "auditar seguridad de la API", o en inglés
 
 ## Modos
 
-- **Setup**: aplica los controles que faltan.
-- **Audit**: solo lectura; entrega un checklist ✅/⚠️/❌ con evidencia y deja que
-  el usuario elija qué corregir.
+- **Setup**: verifica las dependencias necesarias (helmet, throttler,
+  class-validator, sanitize-html, etc.), instala las que falten con el package
+  manager del repo (detectado por el lockfile, con chequeo de compatibilidad de
+  peers) y luego aplica los controles que faltan.
+- **Audit**: solo lectura (no instala nada); entrega un checklist ✅/⚠️/❌ con
+  evidencia, incluidas las dependencias faltantes, y deja que el usuario elija
+  qué corregir.
 
 ## Estructura
 
