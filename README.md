@@ -12,7 +12,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT" />
-  <img src="https://img.shields.io/badge/skills-13-7c3aed.svg" alt="Skills: 13" />
+  <img src="https://img.shields.io/badge/skills-14-7c3aed.svg" alt="Skills: 14" />
   <img src="https://img.shields.io/badge/agent-Claude%20Code-d97757.svg" alt="Claude Code" />
 </p>
 
@@ -35,6 +35,7 @@ npx skills add Bambu-Developers/skills
 Or install an individual skill by name:
 
 ```bash
+npx skills add Bambu-Developers/skills/bambu-angular-file-architecture
 npx skills add Bambu-Developers/skills/bambu-e2e-test-matrix
 npx skills add Bambu-Developers/skills/bambu-git-flow
 npx skills add Bambu-Developers/skills/bambu-nest-api-guide
@@ -64,6 +65,7 @@ Once installed, the agent will leverage each skill automatically when a matching
 
 | Skill | What it does |
 |-------|--------------|
+| [**bambu-angular-file-architecture**](./bambu-angular-file-architecture) | Defines and maintains the file architecture of a standalone Angular app — four layers (`core/`, `shared/ui/`, `layouts/`, `features/`) with a verifiable membership rule each, lazy loading per area, repository as interface + `InjectionToken`, and business rules as pure functions outside Angular. |
 | [**bambu-e2e-test-matrix**](./bambu-e2e-test-matrix) | Generates and runs manual E2E test matrices (flow, usability, visual, accessibility, edge cases) against any web app via Playwright MCP — batch execution with continuous video evidence, optional Figma diffs and SAST security analysis, and a final scoring/ranking. |
 | [**bambu-git-flow**](./bambu-git-flow) | Creates branches and opens draft PRs per Bambu's internal Branching Strategy Policy — infers type/base, validates the naming convention, runs the policy's pre-checks, and sets the right merge method and version label. |
 | [**bambu-nest-api-guide**](./bambu-nest-api-guide) | Diffs a git range in our NestJS + Prisma monorepo, classifies every touched endpoint (new/modified/removed, breaking vs. additive), and publishes a frontend-facing API integration guide as an Artifact. |
@@ -77,6 +79,10 @@ Once installed, the agent will leverage each skill automatically when a matching
 | [**bambu-spec-implement**](./bambu-spec-implement) | The fast half of that same flow — refuses to start unless the spec (and its dependencies) is Approved, executes its contract as written with no re-litigating design, and flips it to Implemented on completion. |
 | [**bambu-terraform-aws**](./bambu-terraform-aws) | Reusable, project-agnostic conventions for generating, modifying, and reviewing Terraform infrastructure on AWS — modules, environments, networking, security groups, tagging, and the interchangeable compute layer. |
 | [**bambu-worktree**](./bambu-worktree) | Creates an isolated `git worktree` under `.worktrees/<feature>/` with its own branch, from a short requirement description or an explicit branch name, to work on several things in parallel without repeated stash/checkout. |
+
+### bambu-angular-file-architecture
+
+Domain- and design-system-agnostic file architecture for standalone Angular apps (v17+, ideally v20+). Its premise is that **where a file lives is a design decision, not a matter of taste**: four layers — `core/` (singleton infrastructure plus the domain module), `shared/ui/` (design-system primitives with no business state), `layouts/` (route shells) and `features/` (screens and routes) — each with a membership rule you can verify, and an explicit dependency direction that is what keeps the lazy chunks separate. Covers the domain-module pattern that stops "there's no backend yet" from becoming a rewrite (`*.model.ts` types, `*.rules.ts` pure functions with catalogs passed in as parameters, `*.repository.ts` interface + `InjectionToken`, and a single mock implementation as the only file that knows the backend), one lazy `*.routes.ts` per area with guards on the parent route, file-naming rules (no `.component.ts` suffix, specs next to the file), and a single barrel for the whole project. Ships `scripts/scaffold-architecture.sh` to create the skeleton in a new project (parameterized by selector prefix, domain, and areas; idempotent, never overwrites) and `references/review-checklist.md` with eleven checks, each with the `grep` that detects the violation. Load it when starting a new Angular project, when deciding where a new file goes ("does this component go in shared or features?"), or when reviewing/refactoring a structure that already drifted (business components in `shared/`, logic inside components, cross-layer imports, barrels breaking the lazy chunks).
 
 ### bambu-e2e-test-matrix
 
@@ -134,6 +140,11 @@ Project-agnostic skill that creates an isolated `git worktree` under `.worktrees
 
 ```
 skills/
+├── bambu-angular-file-architecture/  # file architecture for standalone Angular apps
+│   ├── SKILL.md
+│   ├── README.md
+│   ├── references/           # domain module + routing/chunks + review checklist
+│   └── scripts/              # scaffold-architecture.sh
 ├── bambu-e2e-test-matrix/    # manual E2E QA (Playwright MCP)
 │   ├── SKILL.md
 │   ├── scripts/              # setup.sh — one-time Playwright MCP config
