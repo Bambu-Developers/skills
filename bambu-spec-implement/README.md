@@ -77,7 +77,19 @@ La única escritura que hace sobre el archivo del spec:
 + > **Status:** Implemented — PR #123
 ```
 
-Ninguna otra sección del spec se modifica.
+Ninguna otra sección del spec se modifica. Si el repo tiene tablero
+(`<specs-dir>/STATE.md`, que mantiene
+[**bambu-spec-define**](../bambu-spec-define)), actualiza además **solo la fila
+de ese spec** — Status y la misma referencia de PR/commit —, porque esta es la
+transición en la que el tablero se desactualiza con más facilidad: ocurre fuera
+de la skill que lo mantiene. El resto del tablero lo recalcula `bambu-spec-define`
+en su siguiente pasada.
+
+El contrato de esa fila va escrito dentro de `SKILL.md`, así que esta skill no
+necesita leer archivos de la otra para hacer su única escritura. Si el tablero no
+existe, no lo crea; si la fila no está, no la inventa; y si `bambu-spec-define`
+no está instalada para verificarlo, lo reporta y cierra el handoff igual — nunca
+falla una implementación por un tablero.
 
 ## Límites (explícitos)
 
@@ -85,5 +97,6 @@ Ninguna otra sección del spec se modifica.
 - No decide ni edita el contenido de un spec — eso es trabajo de `bambu-spec-define`.
 - No reinterpreta los Non-goals como alcance implícito.
 - No improvisa ante una ambigüedad real del spec Approved — se detiene y pregunta, y lo reporta como un hueco del spec, no lo resuelve en silencio.
+- No crea el tablero `STATE.md` si no existe, ni toca en él nada más que la fila del spec que acaba de implementar.
 
 Licencia: MIT · Bambu Tech Services.

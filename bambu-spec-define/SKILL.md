@@ -1,6 +1,6 @@
 ---
 name: bambu-spec-define
-description: Crea, revisa y gestiona el ciclo de vida de specs (`SPEC NN`) para un feature antes de que se escriba una sola línea de código — la fase deliberadamente lenta de un flujo de spec-driven design. Hace preguntas socráticas para llenar cada sección de `templates/SPEC.template.md` (contexto, goals, non-goals, dependencias, requisitos funcionales, interfaces y contratos, requisitos no funcionales, edge cases, criterios de aceptación, riesgos, preguntas abiertas), asigna el número `NN` secuencial, valida las referencias `Depends on:`, y controla las transiciones de estado Draft → In review → Approved → Implemented → Obsolete (o sus equivalentes en español — Borrador → En revisión → Aprobado → Implementado → Obsoleto). Usa este skill cuando el usuario pida "escribamos el spec de...", "necesito un spec para...", "let's spec out...", "write a spec for...", "manda este spec a revisión", "apruebo el SPEC 04", "approve SPEC 04", "¿qué dice el SPEC 02?", "este spec quedó obsoleto", o mencione `specs/SPEC-NN` explícitamente. Nunca escribe código de aplicación ni empieza una implementación — eso es trabajo de **bambu-spec-implement**, que solo arranca una vez que el spec correspondiente llegue a Approved.
+description: Crea, revisa y gestiona el ciclo de vida de specs (`SPEC NN`) para un feature antes de que se escriba una sola línea de código — la fase deliberadamente lenta de un flujo de spec-driven design. Hace preguntas socráticas para llenar cada sección de `templates/SPEC.template.md` (contexto, goals, non-goals, dependencias, requisitos funcionales, interfaces y contratos, requisitos no funcionales, edge cases, criterios de aceptación, riesgos, preguntas abiertas), asigna el número `NN` secuencial, valida las referencias `Depends on:`, y controla las transiciones de estado Draft → In review → Approved → Implemented → Obsolete (o sus equivalentes en español — Borrador → En revisión → Aprobado → Implementado → Obsoleto). Usa este skill cuando el usuario pida "escribamos el spec de...", "necesito un spec para...", "let's spec out...", "write a spec for...", "manda este spec a revisión", "apruebo el SPEC 04", "approve SPEC 04", "¿qué dice el SPEC 02?", "este spec quedó obsoleto", o mencione `specs/SPEC-NN` explícitamente. Mantiene además el tablero `STATE.md` del directorio de specs —índice de todos los specs con su estado, grafo de dependencias, qué está listo para implementar y qué está bloqueado y por quién—, que se regenera al crear un spec y en cada cambio de estado; úsalo también cuando el usuario pregunte "¿cómo vamos con los specs?", "estado de los specs", "actualiza el STATE", "qué specs faltan", "qué puedo implementar ya", "qué está bloqueando al SPEC 07", "muéstrame el grafo de dependencias de los specs", "spec status board", o mencione `STATE.md`. Nunca escribe código de aplicación ni empieza una implementación — eso es trabajo de **bambu-spec-implement**, que solo arranca una vez que el spec correspondiente llegue a Approved.
 ---
 
 # Spec-driven design — definición del spec
@@ -17,6 +17,7 @@ Este skill cubre la mitad **lenta** de ese flujo: producir, revisar y aprobar el
 - "¿Qué dice el SPEC 02?", "muéstrame el SPEC 03".
 - "Este spec ya quedó obsoleto, lo reemplazó el SPEC 09".
 - El usuario menciona `specs/SPEC-NN` o un número de spec explícito.
+- "¿Cómo vamos con los specs?", "actualiza el STATE", "¿qué puedo implementar ya?", "¿qué está bloqueando al SPEC 07?" — todo eso se contesta con el tablero (Paso 7), no abriendo archivo por archivo.
 
 No lo uses para escribir o modificar código de aplicación — ese es el límite duro de este skill. Tampoco lo uses para documentación de referencia general (eso es `bambu-readme-generator` u otros docs); un spec es un contrato de una sola iniciativa, no documentación descriptiva del repo.
 
@@ -29,6 +30,8 @@ test -d docs/specs && echo docs/specs || echo specs
 ```
 
 Si `docs/specs/` ya existe en el repo, úsalo. Si no, `specs/` en la raíz es el default — detecta, no asumas. Si ninguno existe todavía (primer spec del repo), crea `specs/` en la raíz.
+
+El tablero vive en ese mismo directorio, como `<specs-dir>/STATE.md` — al lado de los specs, para que sus enlaces relativos funcionen igual en GitHub que en el editor.
 
 ### Paso 1 — Spec nuevo o continuación
 
@@ -77,7 +80,38 @@ Una sección MANDATORY sin contenido aplicable se escribe como `N/A — <razón 
 
 Escribe `<specs-dir>/SPEC-NN-slug.md` con `Status: Draft` (o su valor actual si es continuación de un spec existente).
 
-### Paso 7 — Transiciones de estado
+### Paso 7 — Actualizar el tablero `STATE.md`
+
+Un spec contesta "qué vamos a construir". El tablero contesta **"cómo vamos"**: una sola foto, en `<specs-dir>/STATE.md`, con todos los specs, su estado, de qué dependen, cuáles están listos para implementar y cuáles están bloqueados y por quién. Sin él, responder "¿qué sigue?" obliga a abrir archivo por archivo.
+
+Se compone de dos mitades separadas por marcadores, y la frontera es la regla más importante de todo el paso:
+
+- Entre `<!-- spec-state:generated:start -->` y `<!-- spec-state:generated:end -->` va lo **derivable** (tabla, resumen, listos, bloqueados, ruta crítica, grafo). Se regenera **entero** desde los archivos de spec, cada vez. Nunca se parchea una fila a mano.
+- Debajo del marcador de cierre va lo **narrativo** (`## Reading the board` y el apéndice opcional `## Project notes`). Se escribe a mano y **se conserva verbatim** en cada regeneración.
+
+Usa `templates/STATE.template.md` como esqueleto y `templates/state-recipes.md` como guía de renderizado: de dónde sale cada dato, cómo se calculan los listos/bloqueados/ruta crítica, y la regla de omisión del diagrama Mermaid (solo con ≥ 6 specs o alguno con 2+ dependencias; por debajo de eso el ASCII ya lo dice todo).
+
+**Cuándo regenerarlo:**
+
+| Disparador | Nota |
+|---|---|
+| Se creó un spec nuevo (Paso 6) | Siempre, en la misma operación — un spec sin fila es exactamente la deriva que el tablero existe para evitar. |
+| Cambió el Status de un spec (Paso 8) | Siempre, incluida la salida a Obsolete: esas filas se quedan, con su razón. |
+| Se renumeró un spec por colisión (Paso 2) | El `NN` viejo no debe sobrevivir en ninguna fila ni en el grafo. |
+| El usuario pregunta por el estado | "¿Cómo vamos?", "¿qué puedo implementar ya?" — regenera y responde desde el tablero. |
+| Hay ≥ 2 specs y todavía no existe tablero | **Ofrécelo**, no lo impongas. Con un solo spec no aporta nada. |
+
+**Cómo:** lee el `STATE.md` actual y guarda todo lo que está después del marcador de cierre → re-deriva el bloque generado completo desde los archivos → escribe el archivo (encabezado + bloque nuevo + narrativo intacto) → corre la verificación y reporta lo que diga:
+
+```bash
+scripts/state-check.sh            # o --dir <specs-dir> si no es el default
+```
+
+El script compara cada fila contra el `> **Status:**` real de su archivo y detecta specs sin fila, filas sin archivo y dependencias rotas. Es solo lectura: si sale 1, el que está mal es el tablero, nunca el spec.
+
+Si el repo ya tiene un `STATE.md` escrito a mano **sin marcadores**, no adivines dónde estaba la frontera: muéstrale al usuario el bloque generado que escribirías, pregúntale qué prosa existente va bajo `## Reading the board`, y solo entonces reemplaza el archivo.
+
+### Paso 8 — Transiciones de estado
 
 Los estados válidos son **Draft, In review, Approved, Implemented, Obsolete** (o sus equivalentes en español: Borrador, En revisión, Aprobado, Implementado, Obsoleto — acéptalos como entrada del usuario, pero **normaliza siempre al token canónico en inglés al escribir el archivo**, para que `bambu-spec-implement` pueda parsear el Status sin importar en qué idioma ocurrió la conversación).
 
@@ -91,9 +125,11 @@ Los estados válidos son **Draft, In review, Approved, Implemented, Obsolete** (
 | Approved → vuelve a In review | Se edita el contenido sustantivo de un spec ya Approved | Regresa el Status automáticamente a `In review` en cuanto cambia una sección MANDATORY/OPTIONAL — una aprobación no sobrevive a un cambio de contrato. |
 | Implemented → (nunca se edita en el lugar) | Se descubre un hueco después de implementado | No toques las secciones sustantivas de un spec Implemented. Si hace falta algo, es un spec **nuevo** que depende de o reemplaza al anterior — la historia de lo que realmente se construyó se mantiene intacta. |
 
-### Paso 8 — Reporte
+Toda transición de esta tabla termina igual: **regenera el tablero** (Paso 7). Un Status que cambia en el archivo y no en `STATE.md` convierte el tablero en una afirmación falsa, que es peor que no tenerlo.
 
-Confirma al usuario: ruta del archivo, Status resultante, qué secciones OPTIONAL se omitieron y por qué, y si quedan Open Questions pendientes que bloquean el paso a Approved.
+### Paso 9 — Reporte
+
+Confirma al usuario: ruta del archivo, Status resultante, qué secciones OPTIONAL se omitieron y por qué, si quedan Open Questions pendientes que bloquean el paso a Approved, y el resultado de `state-check.sh` sobre el tablero.
 
 ## Reglas duras
 
@@ -105,8 +141,15 @@ Confirma al usuario: ruta del archivo, Status resultante, qué secciones OPTIONA
 - **Nunca** edites las secciones sustantivas de un spec Implemented — escribe un spec nuevo en su lugar.
 - **Nunca** borres un archivo de spec — márcalo Obsolete con la razón en la propia línea de Status.
 - **Nunca** escribas código de aplicación — ese es el trabajo de **bambu-spec-implement**, una vez que el spec esté Approved.
+- **Nunca** edites a mano el bloque generado del tablero — regenéralo entero desde los archivos de spec. La única excepción permitida es ajena a este skill: al cerrar un handoff, **bambu-spec-implement** actualiza la fila de su spec (Status + Ref) sin recalcular lo demás; esa es justamente la deriva que tu siguiente regeneración reconcilia.
+- **Nunca** pises el bloque narrativo del tablero al regenerar — se conserva verbatim; es lo único que la tabla no sabe decir.
+- **Nunca** dejes el tablero sin regenerar después de crear un spec o cambiar un Status.
+- **Nunca** trates el tablero como fuente de verdad: si una fila y su archivo se contradicen, **gana el archivo** — y el tablero se regenera.
 
 ## Files
 
 - `templates/SPEC.template.md` — esqueleto del spec con `{{placeholders}}`, header fijo + 11 secciones de cuerpo.
 - `templates/section-recipes.md` — receta socrática por placeholder (qué preguntar, cuándo omitir la sección).
+- `templates/STATE.template.md` — esqueleto del tablero, con los marcadores que separan lo generado de lo narrativo.
+- `templates/state-recipes.md` — cómo renderizar cada bloque del tablero y de dónde sale cada dato.
+- `scripts/state-check.sh` — verifica que el tablero coincida con los archivos de spec. Solo lectura; sale 1 ante cualquier deriva.
