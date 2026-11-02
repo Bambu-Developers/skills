@@ -1,6 +1,6 @@
 ---
 name: bambu-spec-implement
-description: Ejecuta la implementación de un feature cuyo spec (`SPEC NN`) ya está en estado Approved, consumiéndolo como el contrato completo — contexto, goals, non-goals, requisitos funcionales, interfaces y contratos, edge cases, criterios de aceptación — sin reinterpretar ni improvisar nada que el spec ya decidió. Usa este skill cuando el usuario pida "implementa el SPEC 04", "build SPEC 04", "empecemos a programar el spec de...", "implementemos lo que dice el spec...", "¿ya podemos hacer el SPEC 03?", o cuando haya un spec Approved listo para ejecutar. Se niega a arrancar si el spec referenciado no está en Approved (Draft, In review u Obsolete) o si alguna de sus dependencias (`Depends on:`) tampoco lo está — en ese caso reporta qué falta y remite a **bambu-spec-define** para resolverlo primero, nunca procede con la mejor intención. Al terminar, marca el spec como Implemented con una referencia a PR/commit y nunca reescribe sus secciones sustantivas.
+description: Ejecuta la implementación de un feature cuyo spec (`SPEC NN`) ya está en estado Approved, consumiéndolo como el contrato completo — contexto, goals, non-goals, requisitos funcionales, interfaces y contratos, edge cases, criterios de aceptación — sin reinterpretar ni improvisar nada que el spec ya decidió. Usa este skill cuando el usuario pida "implementa el SPEC 04", "build SPEC 04", "empecemos a programar el spec de...", "implementemos lo que dice el spec...", "¿ya podemos hacer el SPEC 03?", o cuando haya un spec Approved listo para ejecutar. Se niega a arrancar si el spec referenciado no está en Approved (Draft, In review u Obsolete) o si alguna de sus dependencias (`Depends on:`) tampoco lo está — en ese caso reporta qué falta y remite a **bambu-spec-define** para resolverlo primero, nunca procede con la mejor intención. Al terminar, marca el spec como Implemented con una referencia a PR/commit, actualiza la fila de ese spec en el tablero `STATE.md` del repo si existe, y nunca reescribe sus secciones sustantivas.
 ---
 
 # Spec-driven design — implementación rápida
@@ -64,6 +64,23 @@ Lo único que este skill escribe de vuelta en el archivo del spec:
 
 Nada más del archivo se toca. Si durante la implementación encontraste un hueco real en el spec, repórtalo al usuario y sugiere un spec nuevo que lo cubra — no edites las secciones sustantivas del que ya está Approved/Implemented.
 
+Y si el repo tiene tablero (`<specs-dir>/STATE.md`, que genera y mantiene **bambu-spec-define**), actualiza ahí la fila de este spec. Esta es la transición en la que el tablero se desactualiza con más facilidad, precisamente porque ocurre fuera de la skill que lo mantiene.
+
+**Contrato de la fila** — lo único que necesitas saber del tablero para esta escritura, sin abrir nada de la otra skill:
+
+```
+| # | Spec | Status | Depends on | Ref |
+| --- | --- | --- | --- | --- |
+| 04 | [PIN login](SPEC-04-pin-login.md) | ✅ Implemented | SPEC 02 | PR #123 |
+```
+
+- Toca **solo dos celdas de tu propia fila**: `Status` pasa a `✅ Implemented` (emoji + el token canónico en inglés, como en el archivo) y `Ref` recibe la misma referencia de PR/commit que acabas de escribir en la línea de Status del spec.
+- **Nunca** escribas fuera del bloque delimitado por `<!-- spec-state:generated:start -->` y `<!-- spec-state:generated:end -->`, y nunca toques otra fila ni las secciones de listos/bloqueados/ruta crítica: cambian con esta transición, y las recalcula `bambu-spec-define` en su siguiente pasada.
+- Si tu spec **no tiene fila** en el tablero, no la inventes ni reordenes la tabla: repórtalo y sigue. El tablero está desincronizado y quien lo arregla, regenerándolo entero, es `bambu-spec-define`.
+- Si **no hay `STATE.md`**, no lo crees: es trabajo de `bambu-spec-define`. Menciónalo en el reporte final y sigue.
+
+**Verificación (opcional).** Si `bambu-spec-define` está instalada, su script `state-check.sh` —solo lectura— confirma que la fila coincide con el archivo; córrelo desde el directorio de esa skill, apuntando al directorio de specs de este repo. Si no está disponible, no bloquees nada: reporta que el tablero quedó pendiente de regenerarse y termina el handoff igual. Esta skill nunca falla una implementación por no poder verificar un tablero.
+
 ## Reglas duras
 
 - **Nunca** empieces a programar contra un spec cuyo Status no sea Approved.
@@ -72,3 +89,5 @@ Nada más del archivo se toca. Si durante la implementación encontraste un huec
 - **Nunca** edites las secciones sustantivas (Context, Goals, Non-goals, Functional requirements, Interfaces & contracts, Edge cases, Acceptance criteria) de un spec Approved o Implemented — si falta algo, repórtalo y propone un spec nuevo.
 - **Nunca** improvises ante una ambigüedad real del spec — detente y pregunta.
 - **Nunca** borres ni reescribas la línea de Status de un modo distinto al cambio mecánico Approved → Implemented.
+- **Nunca** dejes el tablero `STATE.md` afirmando que este spec sigue Approved después de haberlo implementado — ni toques en él nada más que su fila.
+- **Nunca** crees un `STATE.md` que no exista: el tablero lo genera y lo mantiene **bambu-spec-define**.

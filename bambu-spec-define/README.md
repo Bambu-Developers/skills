@@ -15,9 +15,13 @@ que el spec correspondiente está Approved.
 ```
 bambu-spec-define/
 ├── SKILL.md                      # metadata + flujo de trabajo + ciclo de vida de estados
-└── templates/
-    ├── SPEC.template.md          # esqueleto del spec con {{placeholders}}
-    └── section-recipes.md        # receta socrática por sección (qué preguntar, cuándo omitir)
+├── templates/
+│   ├── SPEC.template.md          # esqueleto del spec con {{placeholders}}
+│   ├── section-recipes.md        # receta socrática por sección (qué preguntar, cuándo omitir)
+│   ├── STATE.template.md         # esqueleto del tablero de estado de todos los specs
+│   └── state-recipes.md          # cómo se renderiza cada bloque del tablero
+└── scripts/
+    └── state-check.sh            # verifica que el tablero coincida con los archivos (solo lectura)
 ```
 
 ## Instalación
@@ -55,6 +59,7 @@ o en lenguaje natural, por ejemplo:
 - *"Apruebo el SPEC 04."*
 - *"¿Qué dice el SPEC 02?"*
 - *"El SPEC 07 quedó obsoleto, lo reemplazó el SPEC 11."*
+- *"¿Cómo vamos con los specs?"*, *"¿qué puedo implementar ya?"*, *"¿qué está bloqueando al SPEC 07?"*
 
 La skill ubica (o crea) el directorio `specs/` en la raíz del repo —o usa
 `docs/specs/` si ya existe—, asigna el siguiente número `NN` libre, exige que el
@@ -78,10 +83,37 @@ Draft → In review → Approved → Implemented
 | Implemented | Implementado | Lo marca `bambu-spec-implement` al terminar; nunca se vuelve a editar en el lugar. |
 | Obsolete | Obsoleto | Cancelado o reemplazado. El archivo nunca se borra. |
 
+### El tablero `STATE.md`
+
+Un spec dice *qué* se va a construir; el tablero dice **cómo vamos**. Vive en
+`<specs-dir>/STATE.md` y se regenera al crear un spec, en cada cambio de estado
+y cuando lo pidas. Tiene dos mitades, separadas por marcadores:
+
+| Mitad | Qué contiene | Al regenerar |
+|---|---|---|
+| Generada | Tabla de estatus, resumen, **listos para implementar**, **bloqueados** (con el nombre de quien bloquea), ruta crítica y grafo de dependencias (ASCII siempre; Mermaid solo si el grafo lo amerita) | Se reconstruye entera desde los archivos de spec |
+| Narrativa | `## Reading the board` y el apéndice opcional `## Project notes` | Se conserva **verbatim** |
+
+*Listos para implementar* es exactamente la precondición que revalida
+`bambu-spec-implement`: Status `Approved` y todas sus dependencias
+`Approved`/`Implemented`.
+
+Como el tablero es una foto y las fotos se desactualizan solas, trae su propia
+verificación — solo lectura, sale 1 ante cualquier deriva:
+
+```bash
+bambu-spec-define/scripts/state-check.sh --dir specs
+```
+
+Compara cada fila contra el `> **Status:**` real de su archivo y detecta specs sin
+fila, filas sin archivo y dependencias rotas o apuntando a specs obsoletos. Si una
+fila y su archivo se contradicen, **gana el archivo**.
+
 ### Salida
 
 ```text
 specs/
+├── STATE.md                        # tablero: índice, grafo y qué está listo/bloqueado
 └── SPEC-04-reintento-de-pagos.md   # Status: Draft → ... → Approved
 ```
 
@@ -91,5 +123,6 @@ specs/
 - No se auto-aprueba a sí misma — Approved requiere instrucción explícita del usuario nombrando el spec.
 - No borra archivos de spec — los marca Obsolete con la razón en la línea de Status.
 - No rellena secciones opcionales con relleno genérico — las omite por completo cuando su regla de omisión aplica.
+- No parchea filas sueltas del tablero ni pisa su mitad narrativa — regenera el bloque generado completo y conserva la prosa.
 
 Licencia: MIT · Bambu Tech Services.
