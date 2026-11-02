@@ -35,8 +35,8 @@ fi
 
 echo "== Pre-chequeos de la política =="
 
-# 0. Nombre de rama (solo si no es una rama permanente — dev/qa/main no siguen esta convención)
-if [[ "$head" != "dev" && "$head" != "qa" && "$head" != "main" ]]; then
+# 0. Nombre de rama (solo si no es una rama permanente — develop/qa/main no siguen esta convención)
+if [[ "$head" != "develop" && "$head" != "qa" && "$head" != "main" ]]; then
   if ! "$SCRIPT_DIR/validate-branch-name.sh" "$head"; then
     echo "ADVERTENCIA: corrige el nombre de la rama antes de continuar (ver arriba)." >&2
   fi

@@ -7,22 +7,22 @@
 
 | Rama | Ambiente | Recibe cambios de | Aprobaciones en PR |
 |---|---|---|---|
-| `dev` | Desarrollo | `feature/*`, `fix/*`, `refactor/*`, `chore/*`, `docs/*` | 1 |
-| `qa` | QA / Staging | `dev` | 1 |
+| `develop` | Desarrollo | `feature/*`, `fix/*`, `refactor/*`, `chore/*`, `docs/*` | 1 |
+| `qa` | QA / Staging | `develop` | 1 |
 | `main` | Producción | `qa` y `hotfix/*` | 2 (una debe ser del líder técnico) |
 
-Promoción unidireccional: `dev → qa → main`. Los cambios de `main` regresan por **sincronización** (`main → qa → dev`) para evitar divergencia — nunca se promueve "hacia abajo".
+Promoción unidireccional: `develop → qa → main`. Los cambios de `main` regresan por **sincronización** (`main → qa → develop`) para evitar divergencia — nunca se promueve "hacia abajo".
 
 ## 2. Ramas de desarrollo
 
 | Tipo | Uso | Se crea desde | Se integra a | Vida máxima |
 |---|---|---|---|---|
-| `feature` | Nueva funcionalidad | `dev` | `dev` | 5 días hábiles |
-| `fix` | Corrección no urgente | `dev` | `dev` | 5 días hábiles |
-| `refactor` | Reestructura sin cambio funcional | `dev` | `dev` | 5 días hábiles |
-| `chore` | Mantenimiento, dependencias, configuración | `dev` | `dev` | 5 días hábiles |
-| `docs` | Documentación | `dev` | `dev` | 5 días hábiles |
-| `hotfix` | Corrección urgente en producción | `main` | `main` (luego sincronizar a `qa` y `dev`) | 1 día hábil |
+| `feature` | Nueva funcionalidad | `develop` | `develop` | 5 días hábiles |
+| `fix` | Corrección no urgente | `develop` | `develop` | 5 días hábiles |
+| `refactor` | Reestructura sin cambio funcional | `develop` | `develop` | 5 días hábiles |
+| `chore` | Mantenimiento, dependencias, configuración | `develop` | `develop` | 5 días hábiles |
+| `docs` | Documentación | `develop` | `develop` | 5 días hábiles |
+| `hotfix` | Corrección urgente en producción | `main` | `main` (luego sincronizar a `qa` y `develop`) | 1 día hábil |
 
 ## 3. Convención de nombres
 
@@ -50,9 +50,9 @@ Ejemplos válidos: `feature/auth-add-password-reset`, `fix/reports-null-total-on
 
 | Integración | Método |
 |---|---|
-| Rama de desarrollo → `dev` | **Rebase and merge** |
-| Promoción `dev → qa → main` | **Merge commit** |
-| Sincronización `main → qa → dev` | **Merge commit** |
+| Rama de desarrollo → `develop` | **Rebase and merge** |
+| Promoción `develop → qa → main` | **Merge commit** |
+| Sincronización `main → qa → develop` | **Merge commit** |
 | `hotfix/*` → `main` | **Merge commit** |
 
 La rama se elimina automáticamente al hacer merge.
