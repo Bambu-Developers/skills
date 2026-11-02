@@ -27,7 +27,7 @@ fi
 if [[ "$type" == "hotfix" ]]; then
   base="main"
 else
-  base="dev"
+  base="develop"
 fi
 
 if git show-ref --verify --quiet "refs/heads/$branch"; then

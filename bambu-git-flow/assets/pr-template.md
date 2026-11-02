@@ -1,4 +1,4 @@
-<!-- Para PRs de promoción (dev→qa, qa→main) agrega al final: `Versión: major | minor | patch` (debe reflejar exactamente la etiqueta aplicada al PR). No la agregues en PRs de rama de desarrollo ni de sincronización. -->
+<!-- Para PRs de promoción (develop→qa, qa→main) agrega al final: `Versión: major | minor | patch` (debe reflejar exactamente la etiqueta aplicada al PR). No la agregues en PRs de rama de desarrollo ni de sincronización. -->
 
 ## Qué cambia
 <resumen breve>

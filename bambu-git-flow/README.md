@@ -8,7 +8,7 @@ merge y etiqueta de versión que correspondan — corriendo antes los
 pre-chequeos de la política (PRs abiertos, tamaño del diff, archivos
 pesados) para que no los rechace el pipeline.
 
-**Nunca** hace merge, aprueba PRs, push directo a `dev`/`qa`/`main`, force
+**Nunca** hace merge, aprueba PRs, push directo a `develop`/`qa`/`main`, force
 push, salta protecciones, extiende plazos de ramas, ni ejecuta excepciones
 de emergencia — eso son decisiones humanas.
 
@@ -62,14 +62,14 @@ natural:
 - *"Voy a trabajar en el timeout de checkout en pagos."*
 - *"Abre el PR."* / *"Sube esto."*
 - *"Hotfix de pagos duplicados."*
-- *"Promueve dev a qa."* / *"Sincroniza main a dev."*
+- *"Promueve develop a qa."* / *"Sincroniza main a develop."*
 - *"¿Cómo se llama la rama para esto?"*
 - *"Revisa el nombre de mi rama."*
 
 La skill cubre seis flujos: **A** crear rama de desarrollo, **B** abrir PR
 de una rama de desarrollo, **C** hotfix (rama + PR a `main` + sincronización
-posterior), **D** promoción `dev→qa`/`qa→main` con etiqueta de versión,
-**E** sincronización hacia abajo `main→qa→dev`, y **F** validar/diagnosticar
+posterior), **D** promoción `develop→qa`/`qa→main` con etiqueta de versión,
+**E** sincronización hacia abajo `main→qa→develop`, y **F** validar/diagnosticar
 un nombre de rama o PR existente.
 
 ### Salida
@@ -82,7 +82,7 @@ un nombre de rama o PR existente.
 
 ## Límites (explícitos)
 
-- Nunca mergea, aprueba, hace push directo o force push a `dev`/`qa`/`main`.
+- Nunca mergea, aprueba, hace push directo o force push a `develop`/`qa`/`main`.
 - Nunca extiende el plazo de vida de una rama ni ejecuta una excepción de
   emergencia — ambas requieren al líder técnico (o al CISO).
 - No impone convención de título de PR ni de mensajes de commit — la
