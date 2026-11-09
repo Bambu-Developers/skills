@@ -12,7 +12,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT" />
-  <img src="https://img.shields.io/badge/skills-14-7c3aed.svg" alt="Skills: 14" />
+  <img src="https://img.shields.io/badge/skills-15-7c3aed.svg" alt="Skills: 15" />
   <img src="https://img.shields.io/badge/agent-Claude%20Code-d97757.svg" alt="Claude Code" />
 </p>
 
@@ -35,6 +35,7 @@ npx skills add Bambu-Developers/skills
 Or install an individual skill by name:
 
 ```bash
+npx skills add Bambu-Developers/skills/bambu-agent-generator
 npx skills add Bambu-Developers/skills/bambu-angular-file-architecture
 npx skills add Bambu-Developers/skills/bambu-e2e-test-matrix
 npx skills add Bambu-Developers/skills/bambu-git-flow
@@ -65,6 +66,7 @@ Once installed, the agent will leverage each skill automatically when a matching
 
 | Skill | What it does |
 |-------|--------------|
+| [**bambu-agent-generator**](./bambu-agent-generator) | Creates Claude Code subagents (`.claude/agents/<name>.md`) with the Bambu agent anatomy — least-privilege tools, a central auditable discipline, a deliverable with fixed structure, and git-versioned persistent memory — and audits/improves existing agent prompts against a rubric, proposing changes as a diff. |
 | [**bambu-angular-file-architecture**](./bambu-angular-file-architecture) | Defines and maintains the file architecture of a standalone Angular app — four layers (`core/`, `shared/ui/`, `layouts/`, `features/`) with a verifiable membership rule each, lazy loading per area, repository as interface + `InjectionToken`, and business rules as pure functions outside Angular. |
 | [**bambu-e2e-test-matrix**](./bambu-e2e-test-matrix) | Generates and runs manual E2E test matrices (flow, usability, visual, accessibility, edge cases) against any web app via Playwright MCP — batch execution with continuous video evidence, optional Figma diffs and SAST security analysis, and a final scoring/ranking. |
 | [**bambu-git-flow**](./bambu-git-flow) | Creates branches and opens draft PRs per Bambu's internal Branching Strategy Policy — infers type/base, validates the naming convention, runs the policy's pre-checks, and sets the right merge method and version label. |
@@ -79,6 +81,10 @@ Once installed, the agent will leverage each skill automatically when a matching
 | [**bambu-spec-implement**](./bambu-spec-implement) | The fast half of that same flow — refuses to start unless the spec (and its dependencies) is Approved, executes its contract as written with no re-litigating design, and flips it to Implemented on completion. |
 | [**bambu-terraform-aws**](./bambu-terraform-aws) | Reusable, project-agnostic conventions for generating, modifying, and reviewing Terraform infrastructure on AWS — modules, environments, networking, security groups, tagging, and the interchangeable compute layer. |
 | [**bambu-worktree**](./bambu-worktree) | Creates an isolated `git worktree` under `.worktrees/<feature>/` with its own branch, from a short requirement description or an explicit branch name, to work on several things in parallel without repeated stash/checkout. |
+
+### bambu-agent-generator
+
+Creates new Claude Code subagents and audits existing ones, so every agent in a repo follows the same Bambu anatomy without anyone having to remember it. In **create mode** it reads the sibling agents first (occupied boundaries, colors, whether the memory protocol is installed), interviews for role, start/end condition, boundary, the role's most expensive mistake, deliverable, tools and autonomy, then turns that most expensive mistake into a **central discipline** — a mandatory classification that has to show up in the deliverable (e.g. DICHO / INFERIDO / SUPUESTO / DESCONOCIDO for an analyst, PASS / FAIL / NO VERIFICABLE AQUÍ / BLOQUEADO for QA) — and drafts the agent from `templates/AGENT.template.md`: least-privilege `tools` derived from the steps, a rule-with-its-why style, nothing that rots in the prompt, and a fixed Step 0 `recall` / last-step `remember` wired to a git-versioned memory protocol (`assets/memory/memory.sh` + `PROTOCOL.md`, installed into the repo if missing). In **improve mode** it gathers evidence (the prompt, the agent's memory, its git history, a concrete misbehavior), runs `references/rubrica.md` (trigger/boundary, discipline, instructions, tools/autonomy, memory, cross-agent checks) and proposes minimal fixes as a diff — never applying them without approval. Ships `scripts/lint-agent.sh`, a deterministic structural check (frontmatter, required sections, memory wiring, declared vs. used tools, cited memory slugs). Written in Spanish. Load it when you ask to "create an agent", "I need a subagent for…", "improve this agent's prompt", "this agent keeps getting X wrong", "audit the agents", or mention `.claude/agents/` explicitly.
 
 ### bambu-angular-file-architecture
 
@@ -140,6 +146,13 @@ Project-agnostic skill that creates an isolated `git worktree` under `.worktrees
 
 ```
 skills/
+├── bambu-agent-generator/    # create / audit Claude Code subagents
+│   ├── SKILL.md
+│   ├── README.md
+│   ├── references/           # agent anatomy + audit rubric
+│   ├── templates/            # AGENT.template.md
+│   ├── scripts/              # lint-agent.sh
+│   └── assets/memory/        # memory.sh + PROTOCOL.md (persistent agent memory)
 ├── bambu-angular-file-architecture/  # file architecture for standalone Angular apps
 │   ├── SKILL.md
 │   ├── README.md
