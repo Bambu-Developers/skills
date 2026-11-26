@@ -12,7 +12,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT" />
-  <img src="https://img.shields.io/badge/skills-15-7c3aed.svg" alt="Skills: 15" />
+  <img src="https://img.shields.io/badge/skills-16-7c3aed.svg" alt="Skills: 16" />
   <img src="https://img.shields.io/badge/agent-Claude%20Code-d97757.svg" alt="Claude Code" />
 </p>
 
@@ -37,6 +37,7 @@ Or install an individual skill by name:
 ```bash
 npx skills add Bambu-Developers/skills/bambu-agent-generator
 npx skills add Bambu-Developers/skills/bambu-angular-file-architecture
+npx skills add Bambu-Developers/skills/bambu-documentos
 npx skills add Bambu-Developers/skills/bambu-e2e-test-matrix
 npx skills add Bambu-Developers/skills/bambu-git-flow
 npx skills add Bambu-Developers/skills/bambu-nest-api-guide
@@ -68,6 +69,7 @@ Once installed, the agent will leverage each skill automatically when a matching
 |-------|--------------|
 | [**bambu-agent-generator**](./bambu-agent-generator) | Creates Claude Code subagents (`.claude/agents/<name>.md`) with the Bambu agent anatomy — least-privilege tools, a central auditable discipline, a deliverable with fixed structure, and git-versioned persistent memory — and audits/improves existing agent prompts against a rubric, proposing changes as a diff. |
 | [**bambu-angular-file-architecture**](./bambu-angular-file-architecture) | Defines and maintains the file architecture of a standalone Angular app — four layers (`core/`, `shared/ui/`, `layouts/`, `features/`) with a verifiable membership rule each, lazy loading per area, repository as interface + `InjectionToken`, and business rules as pure functions outside Angular. |
+| [**bambu-documentos**](./bambu-documentos) | Generates editable Word (`.docx`) documents with Bambú Tech Services' visual identity — cover, logo header, numbered footer, index, tables, signatures — from a data file. Templates for meeting minutes, reports, technical proposals and manuals, plus free-form documents. |
 | [**bambu-e2e-test-matrix**](./bambu-e2e-test-matrix) | Generates and runs manual E2E test matrices (flow, usability, visual, accessibility, edge cases) against any web app via Playwright MCP — batch execution with continuous video evidence, optional Figma diffs and SAST security analysis, and a final scoring/ranking. |
 | [**bambu-git-flow**](./bambu-git-flow) | Creates branches and opens draft PRs per Bambu's internal Branching Strategy Policy — infers type/base, validates the naming convention, runs the policy's pre-checks, and sets the right merge method and version label. |
 | [**bambu-nest-api-guide**](./bambu-nest-api-guide) | Diffs a git range in our NestJS + Prisma monorepo, classifies every touched endpoint (new/modified/removed, breaking vs. additive), and publishes a frontend-facing API integration guide as an Artifact. |
@@ -89,6 +91,10 @@ Creates new Claude Code subagents and audits existing ones, so every agent in a 
 ### bambu-angular-file-architecture
 
 Domain- and design-system-agnostic file architecture for standalone Angular apps (v17+, ideally v20+). Its premise is that **where a file lives is a design decision, not a matter of taste**: four layers — `core/` (singleton infrastructure plus the domain module), `shared/ui/` (design-system primitives with no business state), `layouts/` (route shells) and `features/` (screens and routes) — each with a membership rule you can verify, and an explicit dependency direction that is what keeps the lazy chunks separate. Covers the domain-module pattern that stops "there's no backend yet" from becoming a rewrite (`*.model.ts` types, `*.rules.ts` pure functions with catalogs passed in as parameters, `*.repository.ts` interface + `InjectionToken`, and a single mock implementation as the only file that knows the backend), one lazy `*.routes.ts` per area with guards on the parent route, file-naming rules (no `.component.ts` suffix, specs next to the file), and a single barrel for the whole project. Ships `scripts/scaffold-architecture.sh` to create the skeleton in a new project (parameterized by selector prefix, domain, and areas; idempotent, never overwrites) and `references/review-checklist.md` with eleven checks, each with the `grep` that detects the violation. Load it when starting a new Angular project, when deciding where a new file goes ("does this component go in shared or features?"), or when reviewing/refactoring a structure that already drifted (business components in `shared/`, logic inside components, cross-layer imports, barrels breaking the lazy chunks).
+
+### bambu-documentos
+
+Produces an editable `.docx` with Bambú's identity (Lexend + Noto Sans, brand green, cover, logo header, footer bar with page numbers, table of contents) from a JavaScript data file, so the work per document is the **content**, not the formatting. A bundled engine (`scripts/build_doc.js`) validates the data before writing (empty cover fields, table rows with the wrong number of cells, unknown block types, missing images) and supports 14 block types. Four templates — meeting minutes, report, technical proposal, manual — plus a free-form mode; `references/plantillas.md` defines structure, data to confirm and writing criteria for each. It never invents cover data (dates, amounts, attendees, signers): it asks once or writes "Por definir". Requires Node.js and the `docx` npm package (`npm install -g docx`, run with `NODE_PATH="$(npm root -g)"`); visual verification uses LibreOffice and poppler when available. Written in Spanish. Load it when you ask for "una minuta", "un informe de avance", "una propuesta técnica", "un manual de usuario" or "un documento Word con formato Bambú".
 
 ### bambu-e2e-test-matrix
 
@@ -158,6 +164,13 @@ skills/
 │   ├── README.md
 │   ├── references/           # domain module + routing/chunks + review checklist
 │   └── scripts/              # scaffold-architecture.sh
+├── bambu-documentos/         # branded Word documents (.docx)
+│   ├── SKILL.md
+│   ├── README.md
+│   ├── references/           # data schema + per-type writing guide
+│   ├── templates/            # minuta · informe · propuesta · manual
+│   ├── scripts/              # build_doc.js — the .docx engine
+│   └── assets/               # logos, footer bar, Lexend / Noto Sans fonts
 ├── bambu-e2e-test-matrix/    # manual E2E QA (Playwright MCP)
 │   ├── SKILL.md
 │   ├── scripts/              # setup.sh — one-time Playwright MCP config
